@@ -1,0 +1,2195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="双溪部落动物探索">
+    <title>双溪部落动物探索 - 移动版</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦅</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #87CEEB, #98FB98);
+            min-height: 100vh;
+            padding: 10px;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            overflow-x: hidden;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c5530;
+            padding: 10px;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .header p {
+            font-size: 1em;
+            color: #4a6741;
+            margin-bottom: 15px;
+        }
+
+        .header-badge {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .header-badge span {
+            background: rgba(255,255,255,0.9);
+            color: #4a6741;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .stats-bar {
+            background: rgba(255,255,255,0.9);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .progress-container {
+            margin-bottom: 15px;
+        }
+
+        .progress-text {
+            text-align: center;
+            color: #2c5530;
+            font-weight: bold;
+            margin-bottom: 12px;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .progress-icon {
+            font-size: 1.1em;
+        }
+
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: 12px;
+            height: 18px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #28a745, #20c997);
+            height: 100%;
+            width: 0%;
+            transition: width 0.8s ease;
+            border-radius: 12px;
+            position: relative;
+        }
+
+        .progress-percentage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #2c5530;
+            font-size: 0.7em;
+            font-weight: bold;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+            z-index: 1;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            text-align: center;
+        }
+
+        .stat-item {
+            background: #f8f9fa;
+            padding: 12px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-icon {
+            font-size: 1.2em;
+            margin-bottom: 2px;
+        }
+
+        .stat-number {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #2c5530;
+        }
+
+        .stat-label {
+            font-size: 0.75em;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .controls {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 0 5px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .filter-btn, .reset-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .reset-btn {
+            background: #dc3545;
+        }
+
+        .filter-btn:hover, .filter-btn.active, .reset-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .filter-btn:active, .reset-btn:active {
+            transform: scale(0.95);
+        }
+
+        .cards-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            max-width: 100%;
+        }
+
+        .animal-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.08);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            -webkit-tap-highlight-color: transparent;
+            position: relative;
+        }
+
+        .animal-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.15);
+        }
+
+        .animal-card.found {
+            border-color: #28a745;
+            background: linear-gradient(135deg, #f8fff8, #f0fff0);
+            box-shadow: 0 8px 30px rgba(40, 167, 69, 0.2);
+        }
+
+        .animal-card.found::before {
+            content: "✓";
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #28a745;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 2;
+        }
+
+        .card-image {
+            height: 140px;
+            background: linear-gradient(135deg, #f0f8ff, #e6f3ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5em;
+            color: #4a6741;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .card-image:hover {
+            background: linear-gradient(135deg, #e6f3ff, #d4edda);
+        }
+
+        .card-image::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .card-content {
+            padding: 15px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .card-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #2c5530;
+            flex: 1;
+        }
+
+        .scientific-name {
+            font-style: italic;
+            color: #666;
+            font-size: 0.7em;
+            margin-bottom: 5px;
+        }
+
+        .card-category {
+            background: #e8f5e8;
+            color: #4a6741;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7em;
+            white-space: nowrap;
+        }
+
+        .card-description {
+            color: #666;
+            line-height: 1.4;
+            margin-bottom: 10px;
+            font-size: 0.85em;
+        }
+
+        .card-tips {
+            background: #fff3cd;
+            border-left: 3px solid #ffc107;
+            padding: 8px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            color: #856404;
+            margin-bottom: 12px;
+        }
+
+        .found-btn {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.95em;
+            width: 100%;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            -webkit-tap-highlight-color: transparent;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .found-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .found-btn:hover::before {
+            left: 100%;
+        }
+
+        .found-btn.found {
+            background: linear-gradient(135deg, #6c757d, #5a6268);
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+        }
+
+        .found-btn:active {
+            transform: scale(0.96);
+            box-shadow: 0 2px 8px rgba(40, 167, 69, 0.4);
+        }
+
+        /* 庆祝效果 */
+        .celebration {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3em;
+            z-index: 1001;
+            pointer-events: none;
+            animation: celebrate 2s ease-out forwards;
+        }
+
+        @keyframes celebrate {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+        }
+
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            max-width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .modal h2 {
+            color: #2c5530;
+            margin-bottom: 15px;
+        }
+
+        .modal p {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .modal-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+
+        .modal-btn.danger {
+            background: #dc3545;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* 触摸优化 */
+        @media (hover: none) {
+            .animal-card:hover {
+                transform: none;
+            }
+            
+            .filter-btn:hover, .reset-btn:hover {
+                transform: none;
+            }
+
+            .stat-item:hover {
+                transform: none;
+            }
+        }
+
+        /* 深色模式支持 */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: linear-gradient(135deg, #1a1a2e, #16213e);
+            }
+            
+            .stats-bar {
+                background: rgba(255,255,255,0.1);
+                backdrop-filter: blur(20px);
+            }
+            
+            .animal-card {
+                background: rgba(255,255,255,0.95);
+            }
+            
+            .header-badge span {
+                background: rgba(255,255,255,0.2);
+                color: #fff;
+            }
+        }
+
+        /* 互动元素 */
+        .interactive-elements {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .floating-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .floating-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .floating-btn:active {
+            transform: scale(0.9);
+        }
+
+        .sound-toggle {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+        }
+
+        .hint-toggle {
+            background: linear-gradient(135deg, #ffe66d, #ffa726);
+        }
+
+        /* 提示系统 */
+        .hint-system {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 2000;
+            display: none;
+            max-width: 300px;
+            text-align: center;
+        }
+
+        .hint-content {
+            margin-bottom: 15px;
+        }
+
+        .hint-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c5530;
+            margin-bottom: 10px;
+        }
+
+        .hint-text {
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .hint-close {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 15px;
+            cursor: pointer;
+        }
+
+        /* 成就系统 */
+        .achievement {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #2c5530;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            z-index: 1500;
+            display: none;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .achievement-icon {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .achievement-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .achievement-desc {
+            font-size: 0.9em;
+        }
+
+        /* 动物详情弹窗 */
+        .animal-detail-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 3000;
+            backdrop-filter: blur(10px);
+        }
+
+        .animal-detail-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            max-width: 90%;
+            max-height: 80%;
+            overflow-y: auto;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .detail-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .detail-emoji {
+            font-size: 4em;
+            margin-bottom: 10px;
+        }
+
+        .detail-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c5530;
+            margin-bottom: 5px;
+        }
+
+        .detail-scientific {
+            font-style: italic;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .detail-info {
+            margin-bottom: 15px;
+        }
+
+        .detail-section {
+            margin-bottom: 15px;
+        }
+
+        .detail-section h4 {
+            color: #2c5530;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .detail-section p {
+            color: #666;
+            line-height: 1.5;
+            font-size: 0.95em;
+        }
+
+        .detail-close {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        /* 动物声音效果 */
+        .sound-effect {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3em;
+            z-index: 1003;
+            pointer-events: none;
+            animation: soundWave 1s ease-out forwards;
+        }
+
+        @keyframes soundWave {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+        }
+
+        /* 动物足迹追踪 */
+        .footprint-trail {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: none;
+        }
+
+        .footprint-title {
+            font-weight: bold;
+            color: #2c5530;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .footprint-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .footprint-item {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s;
+        }
+
+        .footprint-item.found {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+            transform: scale(1.1);
+        }
+
+        /* 探索地图 */
+        .exploration-map {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 2000;
+            display: none;
+            max-width: 90%;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+
+        .map-title {
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2c5530;
+            margin-bottom: 20px;
+        }
+
+        .map-areas {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .map-area {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s;
+        }
+
+        .map-area.completed {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .map-area-icon {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+
+        .map-area-title {
+            font-weight: bold;
+            color: #2c5530;
+            margin-bottom: 5px;
+        }
+
+        .map-area-progress {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        /* 动物叫声按钮 */
+        .animal-sound-btn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            font-size: 1.2em;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.3s;
+        }
+
+        .animal-sound-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* 动物知识问答 */
+        .quiz-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 4000;
+            backdrop-filter: blur(10px);
+        }
+
+        .quiz-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            max-width: 90%;
+            max-height: 80%;
+            overflow-y: auto;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .quiz-question {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c5530;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .quiz-option {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+
+        .quiz-option:hover {
+            background: #e9ecef;
+        }
+
+        .quiz-option.correct {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .quiz-option.incorrect {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+
+        .quiz-result {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        /* 动物收藏册 */
+        .collection-book {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 2000;
+            display: none;
+            max-width: 90%;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+
+        .collection-title {
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2c5530;
+            margin-bottom: 20px;
+        }
+
+        .collection-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .collection-item {
+            text-align: center;
+            padding: 15px;
+            border-radius: 15px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s;
+        }
+
+        .collection-item.found {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .collection-emoji {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+
+        .collection-name {
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #2c5530;
+        }
+
+        /* 互动按钮组 */
+        .interaction-buttons {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .interaction-btn {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .interaction-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .interaction-btn.secondary {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        }
+
+        .interaction-btn.tertiary {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+        }
+
+        /* 增强庆祝效果 */
+        .celebration-enhanced {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1002;
+            pointer-events: none;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ff6b6b;
+            animation: confetti-fall 3s linear infinite;
+        }
+
+        .confetti:nth-child(2) { background: #4ecdc4; animation-delay: 0.5s; }
+        .confetti:nth-child(3) { background: #ffe66d; animation-delay: 1s; }
+        .confetti:nth-child(4) { background: #ff6b9d; animation-delay: 1.5s; }
+        .confetti:nth-child(5) { background: #a8e6cf; animation-delay: 2s; }
+
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* 横屏优化 */
+        @media (orientation: landscape) and (max-height: 500px) {
+            .header {
+                margin-bottom: 10px;
+            }
+            
+            .header h1 {
+                font-size: 1.4em;
+            }
+            
+            .stats-bar {
+                padding: 10px;
+            }
+            
+            .cards-container {
+                gap: 10px;
+            }
+        }
+
+        /* 大屏幕优化 */
+        @media (min-width: 768px) {
+            .cards-container {
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🦅 双溪部落动物探索</h1>
+        <p>在湿地保护区寻找这些神奇的动物吧！</p>
+        <div class="header-badge">
+            <span>🌿 自然探索</span>
+            <span>📱 移动优化</span>
+        </div>
+    </div>
+
+    <div class="stats-bar">
+        <div class="progress-container">
+            <div class="progress-text">
+                <span class="progress-icon">🎯</span>
+                已发现: <span id="found-count">0</span> / <span id="total-count">16</span> 种动物
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+                <div class="progress-percentage" id="progress-percentage">0%</div>
+            </div>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-icon">🐦</div>
+                <div class="stat-number" id="birds-found">0</div>
+                <div class="stat-label">鸟类</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon">🦁</div>
+                <div class="stat-number" id="mammals-found">0</div>
+                <div class="stat-label">哺乳动物</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon">🦎</div>
+                <div class="stat-number" id="reptiles-found">0</div>
+                <div class="stat-label">爬行动物</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="filter-btn active" data-filter="all">全部</button>
+        <button class="filter-btn" data-filter="birds">🐦 鸟类</button>
+        <button class="filter-btn" data-filter="mammals">🦁 哺乳动物</button>
+        <button class="filter-btn" data-filter="reptiles">🦎 爬行动物</button>
+        <button class="filter-btn" data-filter="fish">🐠 鱼类</button>
+        <button class="filter-btn" data-filter="invertebrates">🦀 无脊椎动物</button>
+        <button class="reset-btn" onclick="showResetConfirm()">🔄 重置</button>
+    </div>
+
+    <div class="cards-container" id="cards-container">
+        <!-- 哺乳动物 -->
+        <div class="animal-card" data-category="mammals">
+            <div class="card-image">🐿️</div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-title">条纹松鼠</div>
+                    <div class="card-category">哺乳动物</div>
+                </div>
+                <div class="scientific-name">Plantain Squirrel, Callosciurus notatus</div>
+                <div class="card-description">背部有明显的黑色条纹。喜欢在树上活动，以果实为食。</div>
+                <div class="card-tips">💡 寻找提示：在树上寻找，它们会发出吱吱声。</div>
+                <button class="found-btn" onclick="markFound(this)">✅ 我找到了！</button>
+            </div>
+        </div>
+
+        <div class="animal-card" data-category="mammals">
+            <div class="card-image">🐒</div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-title">长尾猕猴</div>
+                    <div class="card-category">哺乳动物</div>
+                </div>
+                <div class="scientific-name">Long-tailed Macaque, Macaca fascicularis</div>
+                <div class="card-description">社会性强的灵长类动物。适应能力强，常在林地活动。</div>
+                <div class="card-tips">💡 寻找提示：在森林区域寻找，注意不要喂食或靠近它们。</div>
+                <button class="found-btn" onclick="markFound(this)">✅ 我找到了！</button>
+            </div>
+        </div>
+
+        <div class="animal-card" data-category="mammals">
+            <div class="card-image">🦇</div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-title">大耳蝠</div>
+                    <div class="card-category">哺乳动物</div>
+                </div>
+                <div class="scientific-name">Large-eared Horseshoe Bat, Rhinolophus philippinensis</div>
+                <div class="card-description">特大的耳朵是其显著特征。夜行性动物，利用回声定位捕食昆虫。</div>
+                <div class="card-tips">💡 寻找提示：在黄昏和夜晚寻找，它们会在空中捕食昆虫。</div>
+                <button class="found-btn" onclick="markFound(this)">✅ 我找到了！</button>
+            </div>
+        </div>
+
+        <!-- 爬行动物 -->
+        <div class="animal-card" data-category="reptiles">
+            <div class="card-image">🐊</div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-title">河口鳄</div>
+                    <div class="card-category">爬行动物</div>
+                </div>
+                <div class="scientific-name">Estuarine Crocodile, Crocodylus porosus</div>
+                <div class="card-description">世界上最大的爬行动物之一。栖息于河口和沿海地区。</div>
+                <div class="card-tips">💡 寻找提示：非常罕见！主要在深水区域，请保持安全距离。</div>
+                <button class="found-btn" onclick="markFound(this)">✅ 我找到了！</button>
+            </div>
+        </div>
+
+        <div class="animal-card" data-category="reptiles">
+            <div class="card-image">🐊</div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-title">小型鳄鱼</div>
+                    <div class="card-category">爬行动物</div>
+                </div>
+                <div class="scientific-name">Freshwater Crocodile, Crocodylus johnsoni</div>
+                <div class="card-description">体型较小的淡水鳄鱼。主要在淡水区域活动。</div>
+                <div class="card-tips">💡 寻找提示：极其罕见，主要在淡水区域。</div>
+                <button class="found-btn" onclick="markFound(this)">✅ 我找到了！</button>
+            </div>
+        </div>
+
+        <div class="animal-card" data-category="reptiles">
+            <div class="card-image">🦎</div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-title">水巨蜥</div>
+                    <div class="card-category">爬行动物</div>
+                </div>
+                <div class="scientific-name">Water Monitor, Varanus salvator</div>
+                <div class="card-description">大型蜥蜴，善于游泳。杂食性，适应能力强。</div>
+                <div class="card-tips">💡 寻找提示：在泥滩、树枝或岩石上寻找，它们喜欢晒太阳。</div>
+                <button class="found-btn" onclick="markFound(this)">✅ 我找到了！</button>
+            </div>
+        </div>
+
+        <!-- 鱼类 -->
+        <div class="animal-card" data-category="fish">
+            <div class="card-image">🐸</div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-title">弹涂鱼</div>
+                    <div class="card-category">鱼类</div>
+                </div>
+                <div class="scientific-name">Mudskipper, Periophthalmus spp.</div>
+                <div class="card-description">能在泥滩上"行走"的鱼类。具有特殊的呼吸系统。</div>
+                <div class="card-tips">💡 寻找提示：在退潮时的泥滩上寻找，它们会在泥地上跳跃。</div>
+                <button class="found-btn" onclick="markFound(this)">✅ 我找到了！</button>
+            </div>
+        </div>
+
+        <div class="animal-card" data-category="fish">
+            <div class="card-image">🐟</div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-title">跳鱼</div>
+                    <div class="card-category">鱼类</div>
+                </div>
+                <div class="scientific-name">Climbing Perch, Anabas testudineus</div>
+                <div class="card-description">能短暂离开水面在陆地移动。有特殊的辅助呼吸器官。</div>
+                <div class="card-tips">💡 寻找提示：在红树林水域中寻找，它们喜欢在树根附近活动。</div>
+                <button class="found-btn" onclick="markFound(this)">✅ 我找到了！</button>
+            </div>
+        </div>
+
+        <!-- 无脊椎动物 -->
+        <div class="animal-card" data-category="invertebrates">
+            <div class="card-image">🦀</div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-title">招潮蟹</div>
+                    <div class="card-category">无脊椎动物</div>
+                </div>
+                <div class="scientific-name">Fiddler Crab, Uca spp.</div>
+                <div class="card-description">雄性有一个特大钳子。生活在潮间带泥滩。</div>
+                <div class="card-tips">💡 寻找提示：在泥滩上寻找，它们会成群活动，形成美丽的图案。</div>
+                <button class="found-btn" onclick="markFound(this)">✅ 我找到了！</button>
+            </div>
+        </div>
+
+        <div class="animal-card" data-category="invertebrates">
+            <div class="card-image">🐜</div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-title">蚂蚁</div>
+                    <div class="card-category">无脊椎动物</div>
+                </div>
+                <div class="scientific-name">Ants, Formicidae family</div>
+                <div class="card-description">社会性昆虫，群居生活。在生态系统中起重要作用。</div>
+                <div class="card-tips">💡 寻找提示：在森林地面和树干上寻找，注意观察它们的活动轨迹。</div>
+                <button class="found-btn" onclick="markFound(this)">✅ 我找到了！</button>
+            </div>
+        </div>
+
+        <div class="animal-card" data-category="invertebrates">
+            <div class="card-image">🦋</div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-title">蝴蝶</div>
+                    <div class="card-category">无脊椎动物</div>
+                </div>
+                <div class="scientific-name">Butterflies, Lepidoptera order</div>
+                <div class="card-description">色彩斑斓的昆虫。是重要的授粉者。</div>
+                <div class="card-tips">💡 寻找提示：在花丛和开阔区域寻找，它们喜欢在阳光下飞舞。</div>
+                <button class="found-btn" onclick="markFound(this)">✅ 我找到了！</button>
+            </div>
+        </div>
+
+        <!-- 鸟类 -->
+        <div class="animal-card" data-category="birds">
+            <div class="card-image">🦢</div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-title">小白鹭</div>
+                    <div class="card-category">鸟类</div>
+                </div>
+                <div class="scientific-name">Little Egret, Egretta garzetta</div>
+                <div class="card-description">优雅的白色水鸟，常在浅水中觅食。特征是黑色长喙和黄色脚掌。</div>
+                <div class="card-tips">💡 寻找提示：在浅水区域寻找，它们会优雅地漫步寻找小鱼。</div>
+                <button class="found-btn" onclick="markFound(this)">✅ 我找到了！</button>
+            </div>
+        </div>
+
+        <div class="animal-card" data-category="birds">
+            <div class="card-image">🦢</div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-title">欧鹭</div>
+                    <div class="card-category">鸟类</div>
+                </div>
+                <div class="scientific-name">Grey Heron, Ardea cinerea</div>
+                <div class="card-description">体型较大的涉禽，羽毛呈灰色。善于在水边静立捕食鱼类。</div>
+                <div class="card-tips">💡 寻找提示：在深水区域寻找，它们会长时间保持静止状态。</div>
+                <button class="found-btn" onclick="markFound(this)">✅ 我找到了！</button>
+            </div>
+        </div>
+
+        <div class="animal-card" data-category="birds">
+            <div class="card-image">🦅</div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-title">白腹海雕</div>
+                    <div class="card-category">鸟类</div>
+                </div>
+                <div class="scientific-name">White-bellied Sea Eagle, Haliaeetus leucogaster</div>
+                <div class="card-description">大型猛禽，胸腹部为白色。常在海岸线上空盘旋，捕食鱼类。</div>
+                <div class="card-tips">💡 寻找提示：在开阔的水域上空寻找，它们会从高处俯冲捕鱼。</div>
+                <button class="found-btn" onclick="markFound(this)">✅ 我找到了！</button>
+            </div>
+        </div>
+
+        <div class="animal-card" data-category="birds">
+            <div class="card-image">🦆</div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-title">矶鹬</div>
+                    <div class="card-category">鸟类</div>
+                </div>
+                <div class="scientific-name">Common Sandpiper, Actitis hypoleucos</div>
+                <div class="card-description">小型涉禽，常在岩石和泥滩上活动。善于在潮间带觅食。</div>
+                <div class="card-tips">💡 寻找提示：在泥滩和岩石区域寻找，它们喜欢在潮间带觅食。</div>
+                <button class="found-btn" onclick="markFound(this)">✅ 我找到了！</button>
+            </div>
+        </div>
+
+        <div class="animal-card" data-category="birds">
+            <div class="card-image">🐦‍⬛</div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-title">乌鸦</div>
+                    <div class="card-category">鸟类</div>
+                </div>
+                <div class="scientific-name">Large-billed Crow, Corvus macrorhynchos</div>
+                <div class="card-description">全身黑色的大型鸟类。聪明机警，常成群活动。</div>
+                <div class="card-tips">💡 寻找提示：在开阔区域和树上寻找，它们会发出响亮的叫声。</div>
+                <button class="found-btn" onclick="markFound(this)">✅ 我找到了！</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 重置确认对话框 -->
+    <div class="modal" id="resetModal">
+        <div class="modal-content">
+            <h2>🔄 重新开始探索</h2>
+            <p>确定要清除所有已找到的动物记录吗？</p>
+            <p>这将重置你的探索进度，但不会影响你的学习成果！</p>
+            <button class="modal-btn" onclick="closeResetModal()">取消</button>
+            <button class="modal-btn danger" onclick="resetProgress()">确定重置</button>
+        </div>
+    </div>
+
+    <!-- 互动元素 -->
+    <div class="interactive-elements">
+        <button class="floating-btn sound-toggle" onclick="toggleSound()" title="声音效果">
+            🔊
+        </button>
+        <button class="floating-btn hint-toggle" onclick="showRandomHint()" title="随机提示">
+            💡
+        </button>
+    </div>
+
+    <!-- 互动按钮组 -->
+    <div class="interaction-buttons">
+        <button class="interaction-btn" onclick="showExplorationMap()">🗺️ 探索地图</button>
+        <button class="interaction-btn secondary" onclick="showCollectionBook()">📚 收藏册</button>
+        <button class="interaction-btn tertiary" onclick="startQuiz()">🧠 知识问答</button>
+        <button class="interaction-btn" onclick="toggleFootprintTrail()">👣 足迹追踪</button>
+    </div>
+
+    <!-- 动物详情弹窗 -->
+    <div class="animal-detail-modal" id="animalDetailModal">
+        <div class="animal-detail-content">
+            <div class="detail-header">
+                <div class="detail-emoji" id="detailEmoji">🦅</div>
+                <div class="detail-title" id="detailTitle">动物名称</div>
+                <div class="detail-scientific" id="detailScientific">科学名称</div>
+            </div>
+            <div class="detail-info">
+                <div class="detail-section">
+                    <h4>📖 基本信息</h4>
+                    <p id="detailDescription">动物描述</p>
+                </div>
+                <div class="detail-section">
+                    <h4>🎯 寻找提示</h4>
+                    <p id="detailTips">寻找提示</p>
+                </div>
+                <div class="detail-section">
+                    <h4>🌍 栖息环境</h4>
+                    <p id="detailHabitat">栖息环境信息</p>
+                </div>
+                <div class="detail-section">
+                    <h4>🕒 最佳观察时间</h4>
+                    <p id="detailTime">最佳观察时间</p>
+                </div>
+            </div>
+            <button class="detail-close" onclick="closeAnimalDetail()">关闭</button>
+        </div>
+    </div>
+
+    <!-- 探索地图 -->
+    <div class="exploration-map" id="explorationMap">
+        <div class="map-title">🗺️ 双溪部落探索地图</div>
+        <div class="map-areas">
+            <div class="map-area" data-area="forest">
+                <div class="map-area-icon">🌳</div>
+                <div class="map-area-title">森林区域</div>
+                <div class="map-area-progress">0/3 动物</div>
+            </div>
+            <div class="map-area" data-area="water">
+                <div class="map-area-icon">💧</div>
+                <div class="map-area-title">水域区域</div>
+                <div class="map-area-progress">0/4 动物</div>
+            </div>
+            <div class="map-area" data-area="mudflat">
+                <div class="map-area-icon">🏖️</div>
+                <div class="map-area-title">泥滩区域</div>
+                <div class="map-area-progress">0/3 动物</div>
+            </div>
+            <div class="map-area" data-area="sky">
+                <div class="map-area-icon">☁️</div>
+                <div class="map-area-title">天空区域</div>
+                <div class="map-area-progress">0/2 动物</div>
+            </div>
+        </div>
+        <button class="detail-close" onclick="closeExplorationMap()">关闭</button>
+    </div>
+
+    <!-- 动物收藏册 -->
+    <div class="collection-book" id="collectionBook">
+        <div class="collection-title">📚 动物收藏册</div>
+        <div class="collection-grid" id="collectionGrid">
+            <!-- 动态生成收藏项 -->
+        </div>
+        <button class="detail-close" onclick="closeCollectionBook()">关闭</button>
+    </div>
+
+    <!-- 动物足迹追踪 -->
+    <div class="footprint-trail" id="footprintTrail">
+        <div class="footprint-title">👣 动物足迹</div>
+        <div class="footprint-grid" id="footprintGrid">
+            <!-- 动态生成足迹 -->
+        </div>
+    </div>
+
+    <!-- 知识问答 -->
+    <div class="quiz-modal" id="quizModal">
+        <div class="quiz-content">
+            <div class="quiz-question" id="quizQuestion">问题加载中...</div>
+            <div class="quiz-options" id="quizOptions">
+                <!-- 动态生成选项 -->
+            </div>
+            <div class="quiz-result" id="quizResult"></div>
+            <button class="detail-close" onclick="closeQuiz()">关闭</button>
+        </div>
+    </div>
+
+    <!-- 提示系统 -->
+    <div class="hint-system" id="hintSystem">
+        <div class="hint-content">
+            <div class="hint-title">💡 探索提示</div>
+            <div class="hint-text" id="hintText">点击提示按钮获取探索建议！</div>
+        </div>
+        <button class="hint-close" onclick="closeHint()">知道了</button>
+    </div>
+
+    <!-- 成就系统 -->
+    <div class="achievement" id="achievement">
+        <div class="achievement-icon" id="achievementIcon">🏆</div>
+        <div class="achievement-title" id="achievementTitle">成就解锁！</div>
+        <div class="achievement-desc" id="achievementDesc">恭喜获得新成就！</div>
+    </div>
+
+    <script>
+        let foundCount = 0;
+        const totalCount = 16;
+        let foundAnimals = new Set();
+        let soundEnabled = true;
+        let achievements = new Set();
+
+        // 成就系统
+        const achievementList = {
+            'first_find': { icon: '🎯', title: '初次发现', desc: '找到第一个动物！' },
+            'five_found': { icon: '🌟', title: '探索新手', desc: '找到5个动物！' },
+            'ten_found': { icon: '🏆', title: '探索专家', desc: '找到10个动物！' },
+            'all_found': { icon: '👑', title: '自然大师', desc: '找到所有动物！' },
+            'bird_expert': { icon: '🦅', title: '鸟类专家', desc: '找到所有鸟类！' },
+            'mammal_expert': { icon: '🦁', title: '哺乳动物专家', desc: '找到所有哺乳动物！' },
+            'reptile_expert': { icon: '🦎', title: '爬行动物专家', desc: '找到所有爬行动物！' }
+        };
+
+        // 提示系统
+        const hintList = [
+            "💡 提示：在浅水区域寻找小白鹭，它们喜欢在浅水中觅食",
+            "💡 提示：观察泥滩上的小洞，可能是招潮蟹的家",
+            "💡 提示：抬头看看天空，白腹海雕可能在盘旋",
+            "💡 提示：仔细听声音，条纹松鼠会发出吱吱声",
+            "💡 提示：在退潮时去泥滩，能看到弹涂鱼跳跃",
+            "💡 提示：在树上寻找，长尾猕猴喜欢在树上活动",
+            "💡 提示：观察水面，水巨蜥喜欢在水边晒太阳",
+            "💡 提示：在花丛中寻找，蝴蝶喜欢在花间飞舞",
+            "💡 提示：注意地面，蚂蚁会排成队伍搬运食物",
+            "💡 提示：在红树林水域寻找，跳鱼喜欢在树根附近",
+            "💡 提示：保持安静，很多动物会被声音吓跑",
+            "💡 提示：带上望远镜，可以更清楚地观察鸟类",
+            "💡 提示：选择清晨或傍晚，动物活动更频繁",
+            "💡 提示：注意安全，不要靠近危险的动物",
+            "💡 提示：记录你的发现，这很有趣！"
+        ];
+
+        // 从本地存储加载进度
+        function loadProgress() {
+            try {
+                const saved = localStorage.getItem('animalProgress');
+                if (saved) {
+                    foundAnimals = new Set(JSON.parse(saved));
+                    foundCount = foundAnimals.size;
+                    updateUI();
+                    console.log('已加载保存的进度:', foundCount, '个动物');
+                }
+            } catch (error) {
+                console.error('加载进度失败:', error);
+                // 如果加载失败，清除可能损坏的数据
+                localStorage.removeItem('animalProgress');
+            }
+        }
+
+        // 保存进度到本地存储
+        function saveProgress() {
+            try {
+                localStorage.setItem('animalProgress', JSON.stringify([...foundAnimals]));
+                console.log('进度已保存:', foundCount, '个动物');
+            } catch (error) {
+                console.error('保存进度失败:', error);
+                // 如果保存失败，尝试清除一些数据
+                try {
+                    localStorage.clear();
+                    localStorage.setItem('animalProgress', JSON.stringify([...foundAnimals]));
+                } catch (e) {
+                    console.error('无法保存进度，localStorage可能不可用');
+                }
+            }
+        }
+
+        // 重置进度
+        function resetProgress() {
+            foundAnimals.clear();
+            foundCount = 0;
+            updateUI();
+            saveProgress();
+            closeResetModal();
+            
+            // 显示重置成功消息
+            setTimeout(() => {
+                alert('🎯 探索已重置！开始新的冒险吧！');
+            }, 100);
+        }
+
+        // 显示重置确认对话框
+        function showResetConfirm() {
+            document.getElementById('resetModal').style.display = 'block';
+        }
+
+        // 关闭重置确认对话框
+        function closeResetModal() {
+            document.getElementById('resetModal').style.display = 'none';
+        }
+
+        // 更新UI显示
+        function updateUI() {
+            document.querySelectorAll('.animal-card').forEach(card => {
+                const animalName = card.querySelector('.card-title').textContent;
+                const button = card.querySelector('.found-btn');
+                
+                if (foundAnimals.has(animalName)) {
+                    card.classList.add('found');
+                    button.classList.add('found');
+                    button.textContent = '🎉 已找到！';
+                } else {
+                    card.classList.remove('found');
+                    button.classList.remove('found');
+                    button.textContent = '✅ 我找到了！';
+                }
+            });
+            updateProgress();
+        }
+
+        // 庆祝效果
+        function createCelebration() {
+            const celebration = document.createElement('div');
+            celebration.className = 'celebration';
+            celebration.innerHTML = '🎉';
+            document.body.appendChild(celebration);
+
+            // 增强庆祝效果
+            if (soundEnabled) {
+                createConfettiEffect();
+            }
+
+            setTimeout(() => {
+                if (celebration.parentNode) {
+                    celebration.parentNode.removeChild(celebration);
+                }
+            }, 2000);
+        }
+
+        // 彩带效果
+        function createConfettiEffect() {
+            const confetti = document.createElement('div');
+            confetti.className = 'celebration-enhanced';
+            
+            for (let i = 0; i < 20; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'confetti';
+                piece.style.left = Math.random() * 100 + 'vw';
+                piece.style.animationDelay = Math.random() * 2 + 's';
+                confetti.appendChild(piece);
+            }
+            
+            document.body.appendChild(confetti);
+            
+            setTimeout(() => {
+                if (confetti.parentNode) {
+                    confetti.parentNode.removeChild(confetti);
+                }
+            }, 3000);
+        }
+
+        // 声音控制
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const soundBtn = document.querySelector('.sound-toggle');
+            soundBtn.innerHTML = soundEnabled ? '🔊' : '🔇';
+            soundBtn.style.background = soundEnabled ? 
+                'linear-gradient(135deg, #4ecdc4, #44a08d)' : 
+                'linear-gradient(135deg, #95a5a6, #7f8c8d)';
+        }
+
+        // 随机提示
+        function showRandomHint() {
+            const randomHint = hintList[Math.floor(Math.random() * hintList.length)];
+            document.getElementById('hintText').textContent = randomHint;
+            document.getElementById('hintSystem').style.display = 'block';
+        }
+
+        // 关闭提示
+        function closeHint() {
+            document.getElementById('hintSystem').style.display = 'none';
+        }
+
+        // 显示成就
+        function showAchievement(achievementKey) {
+            if (achievements.has(achievementKey)) return;
+            
+            achievements.add(achievementKey);
+            const achievement = achievementList[achievementKey];
+            
+            document.getElementById('achievementIcon').textContent = achievement.icon;
+            document.getElementById('achievementTitle').textContent = achievement.title;
+            document.getElementById('achievementDesc').textContent = achievement.desc;
+            
+            const achievementElement = document.getElementById('achievement');
+            achievementElement.style.display = 'block';
+            
+            setTimeout(() => {
+                achievementElement.style.display = 'none';
+            }, 3000);
+        }
+
+        // 检查成就
+        function checkAchievements() {
+            // 检查数量成就
+            if (foundCount === 1 && !achievements.has('first_find')) {
+                showAchievement('first_find');
+            }
+            if (foundCount === 5 && !achievements.has('five_found')) {
+                showAchievement('five_found');
+            }
+            if (foundCount === 10 && !achievements.has('ten_found')) {
+                showAchievement('ten_found');
+            }
+            if (foundCount === totalCount && !achievements.has('all_found')) {
+                showAchievement('all_found');
+            }
+
+            // 检查分类成就
+            const birdCount = document.querySelectorAll('.animal-card[data-category="birds"].found').length;
+            const mammalCount = document.querySelectorAll('.animal-card[data-category="mammals"].found').length;
+            const reptileCount = document.querySelectorAll('.animal-card[data-category="reptiles"].found').length;
+
+            if (birdCount === 4 && !achievements.has('bird_expert')) {
+                showAchievement('bird_expert');
+            }
+            if (mammalCount === 3 && !achievements.has('mammal_expert')) {
+                showAchievement('mammal_expert');
+            }
+            if (reptileCount === 3 && !achievements.has('reptile_expert')) {
+                showAchievement('reptile_expert');
+            }
+        }
+
+        // 过滤功能
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const filter = this.getAttribute('data-filter');
+                
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                document.querySelectorAll('.animal-card').forEach(card => {
+                    if (filter === 'all' || card.getAttribute('data-category') === filter) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // 标记找到的动物
+        function markFound(button) {
+            const card = button.closest('.animal-card');
+            const animalName = card.querySelector('.card-title').textContent;
+
+            if (foundAnimals.has(animalName)) {
+                // 取消标记
+                foundAnimals.delete(animalName);
+                foundCount--;
+                button.classList.remove('found');
+                button.textContent = '✅ 我找到了！';
+                card.classList.remove('found');
+            } else {
+                // 标记为找到
+                foundAnimals.add(animalName);
+                foundCount++;
+                button.classList.add('found');
+                button.textContent = '🎉 已找到！';
+                card.classList.add('found');
+                
+                // 庆祝效果
+                createCelebration();
+                
+                // 检查成就
+                checkAchievements();
+                
+                // 触觉反馈（如果支持）
+                if (navigator.vibrate) {
+                    navigator.vibrate(100);
+                }
+            }
+            
+            updateProgress();
+            saveProgress();
+        }
+
+        // 更新进度
+        function updateProgress() {
+            const progressFill = document.getElementById('progress-fill');
+            const progressPercentage = document.getElementById('progress-percentage');
+            const foundCountElement = document.getElementById('found-count');
+            const totalCountElement = document.getElementById('total-count');
+            
+            const percentage = (foundCount / totalCount) * 100;
+            progressFill.style.width = percentage + '%';
+            progressPercentage.textContent = Math.round(percentage) + '%';
+            foundCountElement.textContent = foundCount;
+            totalCountElement.textContent = totalCount;
+            
+            // 更新分类统计
+            updateCategoryStats();
+            
+            if (percentage >= 100) {
+                progressFill.style.background = 'linear-gradient(90deg, #ffd700, #ffed4e)';
+                setTimeout(() => {
+                    alert('🎉 恭喜！你已经找到了所有动物！你是真正的自然探索家！');
+                }, 500);
+            } else if (percentage >= 75) {
+                progressFill.style.background = 'linear-gradient(90deg, #28a745, #20c997)';
+            } else if (percentage >= 50) {
+                progressFill.style.background = 'linear-gradient(90deg, #ffc107, #ffca2c)';
+            } else {
+                progressFill.style.background = 'linear-gradient(90deg, #dc3545, #e74c3c)';
+            }
+        }
+
+        // 更新分类统计
+        function updateCategoryStats() {
+            const categories = ['birds', 'mammals', 'reptiles'];
+            categories.forEach(category => {
+                const count = document.querySelectorAll(`.animal-card[data-category="${category}"].found`).length;
+                document.getElementById(`${category}-found`).textContent = count;
+            });
+        }
+
+        // 点击模态框外部关闭
+        document.getElementById('resetModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeResetModal();
+            }
+        });
+
+        // 防止页面缩放
+        document.addEventListener('gesturestart', function(e) {
+            e.preventDefault();
+        });
+
+        // 防止双击缩放
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+
+        // 动物详细信息数据
+        const animalDetails = {
+            '条纹松鼠': {
+                emoji: '🐿️',
+                scientific: 'Plantain Squirrel, Callosciurus notatus',
+                description: '背部有明显的黑色条纹。喜欢在树上活动，以果实为食。',
+                tips: '在树上寻找，它们会发出吱吱声。',
+                habitat: '森林、公园、花园等有树木的环境',
+                time: '清晨和傍晚，天气晴朗时活动最频繁'
+            },
+            '长尾猕猴': {
+                emoji: '🐒',
+                scientific: 'Long-tailed Macaque, Macaca fascicularis',
+                description: '社会性强的灵长类动物。适应能力强，常在林地活动。',
+                tips: '在森林区域寻找，注意不要喂食或靠近它们。',
+                habitat: '热带森林、红树林、沿海地区',
+                time: '全天活动，但清晨和傍晚最活跃'
+            },
+            '大耳蝠': {
+                emoji: '🦇',
+                scientific: 'Large-eared Horseshoe Bat, Rhinolophus philippinensis',
+                description: '特大的耳朵是其显著特征。夜行性动物，利用回声定位捕食昆虫。',
+                tips: '在黄昏和夜晚寻找，它们会在空中捕食昆虫。',
+                habitat: '洞穴、树洞、建筑物缝隙',
+                time: '黄昏到黎明，夜间活动'
+            },
+            '河口鳄': {
+                emoji: '🐊',
+                scientific: 'Estuarine Crocodile, Crocodylus porosus',
+                description: '世界上最大的爬行动物之一。栖息于河口和沿海地区。',
+                tips: '非常罕见！主要在深水区域，请保持安全距离。',
+                habitat: '河口、红树林、沿海水域',
+                time: '全天活动，但清晨和傍晚最活跃'
+            },
+            '小型鳄鱼': {
+                emoji: '🐊',
+                scientific: 'Freshwater Crocodile, Crocodylus johnsoni',
+                description: '体型较小的淡水鳄鱼。主要在淡水区域活动。',
+                tips: '极其罕见，主要在淡水区域。',
+                habitat: '淡水河流、湖泊、沼泽',
+                time: '全天活动，但清晨和傍晚最活跃'
+            },
+            '水巨蜥': {
+                emoji: '🦎',
+                scientific: 'Water Monitor, Varanus salvator',
+                description: '大型蜥蜴，善于游泳。杂食性，适应能力强。',
+                tips: '在泥滩、树枝或岩石上寻找，它们喜欢晒太阳。',
+                habitat: '河流、湖泊、沼泽、红树林',
+                time: '白天活动，喜欢在阳光下晒太阳'
+            },
+            '弹涂鱼': {
+                emoji: '🐸',
+                scientific: 'Mudskipper, Periophthalmus spp.',
+                description: '能在泥滩上"行走"的鱼类。具有特殊的呼吸系统。',
+                tips: '在退潮时的泥滩上寻找，它们会在泥地上跳跃。',
+                habitat: '潮间带泥滩、红树林根部',
+                time: '退潮时，特别是清晨和傍晚'
+            },
+            '跳鱼': {
+                emoji: '🐟',
+                scientific: 'Climbing Perch, Anabas testudineus',
+                description: '能短暂离开水面在陆地移动。有特殊的辅助呼吸器官。',
+                tips: '在红树林水域中寻找，它们喜欢在树根附近活动。',
+                habitat: '淡水水域、红树林、沼泽',
+                time: '全天活动，但清晨和傍晚最活跃'
+            },
+            '招潮蟹': {
+                emoji: '🦀',
+                scientific: 'Fiddler Crab, Uca spp.',
+                description: '雄性有一个特大钳子。生活在潮间带泥滩。',
+                tips: '在泥滩上寻找，它们会成群活动，形成美丽的图案。',
+                habitat: '潮间带泥滩、红树林根部',
+                time: '退潮时，特别是清晨和傍晚'
+            },
+            '蚂蚁': {
+                emoji: '🐜',
+                scientific: 'Ants, Formicidae family',
+                description: '社会性昆虫，群居生活。在生态系统中起重要作用。',
+                tips: '在森林地面和树干上寻找，注意观察它们的活动轨迹。',
+                habitat: '森林、草地、土壤、树干',
+                time: '全天活动，但清晨和傍晚最活跃'
+            },
+            '蝴蝶': {
+                emoji: '🦋',
+                scientific: 'Butterflies, Lepidoptera order',
+                description: '色彩斑斓的昆虫。是重要的授粉者。',
+                tips: '在花丛和开阔区域寻找，它们喜欢在阳光下飞舞。',
+                habitat: '花丛、草地、森林边缘',
+                time: '白天，特别是阳光充足的时候'
+            },
+            '小白鹭': {
+                emoji: '🦢',
+                scientific: 'Little Egret, Egretta garzetta',
+                description: '优雅的白色水鸟，常在浅水中觅食。特征是黑色长喙和黄色脚掌。',
+                tips: '在浅水区域寻找，它们会优雅地漫步寻找小鱼。',
+                habitat: '浅水区域、湿地、河流、湖泊',
+                time: '清晨和傍晚，退潮时'
+            },
+            '欧鹭': {
+                emoji: '🦢',
+                scientific: 'Grey Heron, Ardea cinerea',
+                description: '体型较大的涉禽，羽毛呈灰色。善于在水边静立捕食鱼类。',
+                tips: '在深水区域寻找，它们会长时间保持静止状态。',
+                habitat: '深水区域、河流、湖泊、沼泽',
+                time: '清晨和傍晚，全天都有活动'
+            },
+            '白腹海雕': {
+                emoji: '🦅',
+                scientific: 'White-bellied Sea Eagle, Haliaeetus leucogaster',
+                description: '大型猛禽，胸腹部为白色。常在海岸线上空盘旋，捕食鱼类。',
+                tips: '在开阔的水域上空寻找，它们会从高处俯冲捕鱼。',
+                habitat: '海岸线、开阔水域、岛屿',
+                time: '白天，特别是清晨和傍晚'
+            },
+            '矶鹬': {
+                emoji: '🦆',
+                scientific: 'Common Sandpiper, Actitis hypoleucos',
+                description: '小型涉禽，常在岩石和泥滩上活动。善于在潮间带觅食。',
+                tips: '在泥滩和岩石区域寻找，它们喜欢在潮间带觅食。',
+                habitat: '潮间带、泥滩、岩石海岸',
+                time: '退潮时，特别是清晨和傍晚'
+            },
+            '乌鸦': {
+                emoji: '🐦‍⬛',
+                scientific: 'Large-billed Crow, Corvus macrorhynchos',
+                description: '全身黑色的大型鸟类。聪明机警，常成群活动。',
+                tips: '在开阔区域和树上寻找，它们会发出响亮的叫声。',
+                habitat: '开阔区域、森林、城市、农田',
+                time: '全天活动，但清晨和傍晚最活跃'
+            }
+        };
+
+        // 动物区域分类
+        const animalAreas = {
+            'forest': ['条纹松鼠', '长尾猕猴', '大耳蝠'],
+            'water': ['河口鳄', '小型鳄鱼', '水巨蜥', '跳鱼'],
+            'mudflat': ['弹涂鱼', '招潮蟹', '矶鹬'],
+            'sky': ['白腹海雕', '乌鸦']
+        };
+
+        // 知识问答题目
+        const quizQuestions = [
+            {
+                question: '哪种动物能在泥滩上"行走"？',
+                options: ['弹涂鱼', '跳鱼', '招潮蟹', '水巨蜥'],
+                correct: 0
+            },
+            {
+                question: '哪种动物是夜行性的？',
+                options: ['小白鹭', '大耳蝠', '条纹松鼠', '长尾猕猴'],
+                correct: 1
+            },
+            {
+                question: '哪种动物是世界上最大的爬行动物之一？',
+                options: ['水巨蜥', '河口鳄', '小型鳄鱼', '长尾猕猴'],
+                correct: 1
+            },
+            {
+                question: '哪种动物会发出吱吱声？',
+                options: ['小白鹭', '条纹松鼠', '招潮蟹', '蚂蚁'],
+                correct: 1
+            },
+            {
+                question: '哪种动物喜欢在阳光下飞舞？',
+                options: ['蝴蝶', '大耳蝠', '白腹海雕', '乌鸦'],
+                correct: 0
+            }
+        ];
+
+        // 显示动物详情
+        function showAnimalDetail(animalName) {
+            const detail = animalDetails[animalName];
+            if (!detail) return;
+
+            document.getElementById('detailEmoji').textContent = detail.emoji;
+            document.getElementById('detailTitle').textContent = animalName;
+            document.getElementById('detailScientific').textContent = detail.scientific;
+            document.getElementById('detailDescription').textContent = detail.description;
+            document.getElementById('detailTips').textContent = detail.tips;
+            document.getElementById('detailHabitat').textContent = detail.habitat;
+            document.getElementById('detailTime').textContent = detail.time;
+
+            document.getElementById('animalDetailModal').style.display = 'block';
+        }
+
+        // 关闭动物详情
+        function closeAnimalDetail() {
+            document.getElementById('animalDetailModal').style.display = 'none';
+        }
+
+        // 显示探索地图
+        function showExplorationMap() {
+            updateMapProgress();
+            document.getElementById('explorationMap').style.display = 'block';
+        }
+
+        // 关闭探索地图
+        function closeExplorationMap() {
+            document.getElementById('explorationMap').style.display = 'none';
+        }
+
+        // 更新地图进度
+        function updateMapProgress() {
+            Object.keys(animalAreas).forEach(area => {
+                const animals = animalAreas[area];
+                const foundCount = animals.filter(animal => foundAnimals.has(animal)).length;
+                const totalCount = animals.length;
+                
+                const areaElement = document.querySelector(`[data-area="${area}"]`);
+                const progressElement = areaElement.querySelector('.map-area-progress');
+                
+                progressElement.textContent = `${foundCount}/${totalCount} 动物`;
+                
+                if (foundCount === totalCount) {
+                    areaElement.classList.add('completed');
+                } else {
+                    areaElement.classList.remove('completed');
+                }
+            });
+        }
+
+        // 显示收藏册
+        function showCollectionBook() {
+            const collectionGrid = document.getElementById('collectionGrid');
+            collectionGrid.innerHTML = '';
+
+            Object.keys(animalDetails).forEach(animalName => {
+                const detail = animalDetails[animalName];
+                const isFound = foundAnimals.has(animalName);
+                
+                const item = document.createElement('div');
+                item.className = `collection-item ${isFound ? 'found' : ''}`;
+                item.innerHTML = `
+                    <div class="collection-emoji">${detail.emoji}</div>
+                    <div class="collection-name">${animalName}</div>
+                `;
+                
+                if (isFound) {
+                    item.onclick = () => showAnimalDetail(animalName);
+                    item.style.cursor = 'pointer';
+                }
+                
+                collectionGrid.appendChild(item);
+            });
+
+            document.getElementById('collectionBook').style.display = 'block';
+        }
+
+        // 关闭收藏册
+        function closeCollectionBook() {
+            document.getElementById('collectionBook').style.display = 'none';
+        }
+
+        // 切换足迹追踪
+        function toggleFootprintTrail() {
+            const trail = document.getElementById('footprintTrail');
+            if (trail.style.display === 'block') {
+                trail.style.display = 'none';
+            } else {
+                updateFootprintTrail();
+                trail.style.display = 'block';
+            }
+        }
+
+        // 更新足迹追踪
+        function updateFootprintTrail() {
+            const footprintGrid = document.getElementById('footprintGrid');
+            footprintGrid.innerHTML = '';
+
+            Object.keys(animalDetails).forEach(animalName => {
+                const detail = animalDetails[animalName];
+                const isFound = foundAnimals.has(animalName);
+                
+                const item = document.createElement('div');
+                item.className = `footprint-item ${isFound ? 'found' : ''}`;
+                item.textContent = detail.emoji;
+                item.title = animalName;
+                
+                footprintGrid.appendChild(item);
+            });
+        }
+
+        // 开始知识问答
+        function startQuiz() {
+            const randomQuestion = quizQuestions[Math.floor(Math.random() * quizQuestions.length)];
+            
+            document.getElementById('quizQuestion').textContent = randomQuestion.question;
+            
+            const optionsContainer = document.getElementById('quizOptions');
+            optionsContainer.innerHTML = '';
+            
+            randomQuestion.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'quiz-option';
+                optionElement.textContent = option;
+                optionElement.onclick = () => selectQuizOption(index, randomQuestion.correct);
+                optionsContainer.appendChild(optionElement);
+            });
+            
+            document.getElementById('quizResult').textContent = '';
+            document.getElementById('quizModal').style.display = 'block';
+        }
+
+        // 选择问答选项
+        function selectQuizOption(selectedIndex, correctIndex) {
+            const options = document.querySelectorAll('.quiz-option');
+            const resultElement = document.getElementById('quizResult');
+            
+            options.forEach((option, index) => {
+                if (index === correctIndex) {
+                    option.classList.add('correct');
+                } else if (index === selectedIndex && index !== correctIndex) {
+                    option.classList.add('incorrect');
+                }
+                option.onclick = null; // 禁用点击
+            });
+            
+            if (selectedIndex === correctIndex) {
+                resultElement.textContent = '🎉 回答正确！';
+                resultElement.style.color = '#28a745';
+            } else {
+                resultElement.textContent = '❌ 回答错误，正确答案已高亮显示';
+                resultElement.style.color = '#dc3545';
+            }
+        }
+
+        // 关闭知识问答
+        function closeQuiz() {
+            document.getElementById('quizModal').style.display = 'none';
+        }
+
+        // 播放动物声音效果
+        function playAnimalSound(animalName) {
+            const soundEffect = document.createElement('div');
+            soundEffect.className = 'sound-effect';
+            
+            // 根据动物类型播放不同的声音效果
+            const sounds = {
+                'birds': '🦅',
+                'mammals': '🐿️',
+                'reptiles': '🦎',
+                'fish': '🐟',
+                'invertebrates': '🦋'
+            };
+            
+            const card = document.querySelector(`[data-category] .card-title:contains('${animalName}')`).closest('.animal-card');
+            const category = card.getAttribute('data-category');
+            
+            soundEffect.textContent = sounds[category] || '🔊';
+            document.body.appendChild(soundEffect);
+            
+            setTimeout(() => {
+                if (soundEffect.parentNode) {
+                    soundEffect.parentNode.removeChild(soundEffect);
+                }
+            }, 1000);
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProgress();
+            console.log('页面加载完成，当前进度:', foundCount, '个动物');
+            
+            // 添加触摸反馈
+            document.querySelectorAll('.found-btn').forEach(btn => {
+                btn.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.98)';
+                });
+                
+                btn.addEventListener('touchend', function() {
+                    this.style.transform = 'scale(1)';
+                });
+            });
+
+            // 添加卡片图片点击事件
+            document.querySelectorAll('.card-image').forEach(img => {
+                img.addEventListener('click', function() {
+                    const animalName = this.closest('.animal-card').querySelector('.card-title').textContent;
+                    showAnimalDetail(animalName);
+                });
+            });
+
+            // 添加模态框点击外部关闭
+            document.querySelectorAll('.animal-detail-modal, .exploration-map, .collection-book, .quiz-modal').forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
