@@ -617,7 +617,7 @@
                 <h3>📈 探索进度预览</h3>
                 <div class="progress-indicator">
                     <div class="progress-bar" id="demoProgress"></div>
-                    <div class="progress-text">0 / 16 动物</div>
+                    <div class="progress-text">0 / 17 动物</div>
                 </div>
                 <p>在应用中查看你的实时探索进度！</p>
             </div>
@@ -802,16 +802,16 @@
             demoProgress = 0;
             const interval = setInterval(() => {
                 demoProgress += Math.random() * 3;
-                if (demoProgress >= 16) {
-                    demoProgress = 16;
+                if (demoProgress >= 17) {
+                    demoProgress = 17;
                     clearInterval(interval);
                 }
                 
-                const percentage = (demoProgress / 16) * 100;
+                const percentage = (demoProgress / 17) * 100;
                 progressBar.style.width = percentage + '%';
-                progressText.textContent = Math.floor(demoProgress) + ' / 16 动物';
+                progressText.textContent = Math.floor(demoProgress) + ' / 17 动物';
                 
-                if (demoProgress === 16) {
+                if (demoProgress === 17) {
                     setTimeout(() => {
                         alert('🎉 恭喜！你已经找到了所有动物！你是真正的自然探索家！');
                     }, 500);

@@ -1067,7 +1067,7 @@
         <div class="progress-container">
             <div class="progress-text">
                 <span class="progress-icon">🎯</span>
-                已发现: <span id="found-count">0</span> / <span id="total-count">16</span> 种动物
+                已发现: <span id="found-count">0</span> / <span id="total-count">17</span> 种动物
             </div>
             <div class="progress-bar">
                 <div class="progress-fill" id="progress-fill"></div>
@@ -1186,6 +1186,20 @@
                 <div class="scientific-name">Water Monitor, Varanus salvator</div>
                 <div class="card-description">大型蜥蜴，善于游泳。杂食性，适应能力强。</div>
                 <div class="card-tips">💡 寻找提示：在泥滩、树枝或岩石上寻找，它们喜欢晒太阳。</div>
+                <button class="found-btn" onclick="markFound(this)">✅ 我找到了！</button>
+            </div>
+        </div>
+
+        <div class="animal-card" data-category="reptiles">
+            <div class="card-image">🐍</div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-title">翠青蛇</div>
+                    <div class="card-category">爬行动物</div>
+                </div>
+                <div class="scientific-name">Oriental Whip Snake, Ahaetulla prasina</div>
+                <div class="card-description">新加坡常见的翠绿色无毒蛇，身体细长，善于在树枝间活动。主要以小型爬行动物和鸟类为食。</div>
+                <div class="card-tips">💡 寻找提示：在树枝和灌木丛中寻找，它们喜欢在绿色植物中隐藏，身体会随着环境变化颜色。</div>
                 <button class="found-btn" onclick="markFound(this)">✅ 我找到了！</button>
             </div>
         </div>
@@ -1474,7 +1488,7 @@
 
     <script>
         let foundCount = 0;
-        const totalCount = 16;
+        const totalCount = 17;
         let foundAnimals = new Set();
 
         let achievements = new Set();
@@ -1507,6 +1521,7 @@
             "💡 提示：在退潮时去泥滩，能看到弹涂鱼跳跃",
             "💡 提示：在树上寻找，长尾猕猴喜欢在树上活动",
             "💡 提示：观察水面，水巨蜥喜欢在水边晒太阳",
+            "💡 提示：仔细观察树枝和灌木丛，翠青蛇喜欢在绿色植物中隐藏，身体会随环境变色",
             "💡 提示：在花丛中寻找，蝴蝶喜欢在花间飞舞",
             "💡 提示：注意地面，蚂蚁会排成队伍搬运食物",
             "💡 提示：在红树林水域寻找，跳鱼喜欢在树根附近",
@@ -1873,6 +1888,14 @@
                 habitat: '河流、湖泊、沼泽、红树林',
                 time: '白天活动，喜欢在阳光下晒太阳'
             },
+            '翠青蛇': {
+                emoji: '🐍',
+                scientific: 'Oriental Whip Snake, Ahaetulla prasina',
+                description: '新加坡常见的翠绿色无毒蛇，身体细长，善于在树枝间活动。主要以小型爬行动物和鸟类为食。',
+                tips: '在树枝和灌木丛中寻找，它们喜欢在绿色植物中隐藏，身体会随着环境变化颜色。',
+                habitat: '树枝、灌木丛、森林、花园、公园',
+                time: '白天活动，特别是清晨和傍晚'
+            },
             '弹涂鱼': {
                 emoji: '🐸',
                 scientific: 'Mudskipper, Periophthalmus spp.',
@@ -1957,7 +1980,7 @@
 
         // 动物区域分类
         const animalAreas = {
-            'forest': ['条纹松鼠', '长尾猕猴', '大耳蝠', '蚂蚁', '蝴蝶'],
+            'forest': ['条纹松鼠', '长尾猕猴', '大耳蝠', '蚂蚁', '蝴蝶', '翠青蛇'],
             'water': ['河口鳄', '小型鳄鱼', '水巨蜥', '跳鱼', '弹涂鱼'],
             'mudflat': ['招潮蟹'],
             'sky': ['小白鹭', '欧鹭', '白腹海雕', '矶鹬', '乌鸦']
@@ -1989,6 +2012,11 @@
                 question: '哪种动物喜欢在阳光下飞舞？',
                 options: ['蝴蝶', '大耳蝠', '白腹海雕', '乌鸦'],
                 correct: 0
+            },
+            {
+                question: '哪种动物是新加坡常见的翠绿色无毒蛇？',
+                options: ['水巨蜥', '翠青蛇', '河口鳄', '小型鳄鱼'],
+                correct: 1
             }
         ];
 
