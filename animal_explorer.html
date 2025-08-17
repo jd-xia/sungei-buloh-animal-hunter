@@ -123,7 +123,7 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
             gap: 10px;
             text-align: center;
         }
@@ -1090,6 +1090,16 @@
                 <div class="stat-number" id="reptiles-found">0</div>
                 <div class="stat-label">爬行动物</div>
             </div>
+            <div class="stat-item">
+                <div class="stat-icon">🐠</div>
+                <div class="stat-number" id="fish-found">0</div>
+                <div class="stat-label">鱼类</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon">🦀</div>
+                <div class="stat-number" id="invertebrates-found">0</div>
+                <div class="stat-label">无脊椎动物</div>
+            </div>
         </div>
     </div>
 
@@ -1419,7 +1429,7 @@
             <div class="map-area" data-area="forest">
                 <div class="map-area-icon">🌳</div>
                 <div class="map-area-title">森林区域</div>
-                <div class="map-area-progress">0/5 动物</div>
+                <div class="map-area-progress">0/6 动物</div>
             </div>
             <div class="map-area" data-area="water">
                 <div class="map-area-icon">💧</div>
@@ -1493,6 +1503,9 @@
 
         let achievements = new Set();
         
+        // 声音控制变量
+        let soundEnabled = true;
+        
         // 背景音乐相关变量
         let bgMusicEnabled = true; // 默认开启
         let bgMusicAudio = null;
@@ -1509,7 +1522,9 @@
             'all_found': { icon: '👑', title: '自然大师', desc: '找到所有动物！' },
             'bird_expert': { icon: '🦅', title: '鸟类专家', desc: '找到所有鸟类！' },
             'mammal_expert': { icon: '🦁', title: '哺乳动物专家', desc: '找到所有哺乳动物！' },
-            'reptile_expert': { icon: '🦎', title: '爬行动物专家', desc: '找到所有爬行动物！' }
+            'reptile_expert': { icon: '🦎', title: '爬行动物专家', desc: '找到所有爬行动物！' },
+            'fish_expert': { icon: '🐠', title: '鱼类专家', desc: '找到所有鱼类！' },
+            'invertebrate_expert': { icon: '🦀', title: '无脊椎动物专家', desc: '找到所有无脊椎动物！' }
         };
 
         // 提示系统
@@ -1711,6 +1726,8 @@
             const birdCount = document.querySelectorAll('.animal-card[data-category="birds"].found').length;
             const mammalCount = document.querySelectorAll('.animal-card[data-category="mammals"].found').length;
             const reptileCount = document.querySelectorAll('.animal-card[data-category="reptiles"].found').length;
+            const fishCount = document.querySelectorAll('.animal-card[data-category="fish"].found').length;
+            const invertebrateCount = document.querySelectorAll('.animal-card[data-category="invertebrates"].found').length;
 
             if (birdCount === 5 && !achievements.has('bird_expert')) {
                 showAchievement('bird_expert');
@@ -1718,8 +1735,14 @@
             if (mammalCount === 3 && !achievements.has('mammal_expert')) {
                 showAchievement('mammal_expert');
             }
-            if (reptileCount === 3 && !achievements.has('reptile_expert')) {
+            if (reptileCount === 4 && !achievements.has('reptile_expert')) {
                 showAchievement('reptile_expert');
+            }
+            if (fishCount === 2 && !achievements.has('fish_expert')) {
+                showAchievement('fish_expert');
+            }
+            if (invertebrateCount === 3 && !achievements.has('invertebrate_expert')) {
+                showAchievement('invertebrate_expert');
             }
         }
 
@@ -1809,10 +1832,13 @@
 
         // 更新分类统计
         function updateCategoryStats() {
-            const categories = ['birds', 'mammals', 'reptiles'];
+            const categories = ['birds', 'mammals', 'reptiles', 'fish', 'invertebrates'];
             categories.forEach(category => {
                 const count = document.querySelectorAll(`.animal-card[data-category="${category}"].found`).length;
-                document.getElementById(`${category}-found`).textContent = count;
+                const element = document.getElementById(`${category}-found`);
+                if (element) {
+                    element.textContent = count;
+                }
             });
         }
 
