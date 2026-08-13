@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>九九乘法闯关</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=ZCOOL+QingKe+HuangYou&family=Noto+Sans+SC:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #10143A;
+    --bg2: #191E52;
+    --bg3: #12173F;
+    --line: #2E3576;
+    --ink: #F1F3FF;
+    --ink-soft: #9AA3D9;
+    --cyan: #4CEBDE;
+    --cyan-dark: #1E9E93;
+    --magenta: #FF5DA2;
+    --magenta-dark: #C93B7C;
+    --yellow: #FFE156;
+    --yellow-dark: #CBA625;
+    --green: #5CFFB3;
+    --green-dark: #2BAF7C;
+    --red: #FF5C5C;
+    --red-dark: #C43D3D;
+  }
+  *{ box-sizing: border-box; }
+  html{ scroll-behavior: smooth; }
+  html,body{
+    margin:0; padding:0; min-height:100%;
+    background:
+      radial-gradient(1.5px 1.5px at 20px 30px, #ffffff55 100%, transparent),
+      radial-gradient(1.5px 1.5px at 90px 80px, #ffffff40 100%, transparent),
+      radial-gradient(1px 1px at 150px 40px, #ffffff55 100%, transparent),
+      radial-gradient(1.5px 1.5px at 60px 130px, #ffffff35 100%, transparent),
+      radial-gradient(1px 1px at 190px 110px, #ffffff45 100%, transparent),
+      var(--bg);
+    background-size: 220px 180px;
+    color: var(--ink);
+    font-family: 'Noto Sans SC', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .pixel{ font-family:'Press Start 2P', monospace; }
+  .display{ font-family:'ZCOOL QingKe HuangYou', 'Noto Sans SC', sans-serif; }
+
+  .wrap{ max-width: 760px; margin:0 auto; padding: 26px 16px 70px; }
+
+  /* HERO */
+  .hero{ text-align:center; margin-bottom: 26px; }
+  .eyebrow{
+    display:inline-block; font-family:'Press Start 2P'; font-size:10px; letter-spacing:1px;
+    color: var(--bg); background: var(--yellow); padding:7px 12px; border-radius: 6px;
+    box-shadow: 0 3px 0 var(--yellow-dark); margin-bottom:14px;
+  }
+  h1.display{
+    font-size: 38px; margin: 0 0 8px; color:#fff;
+    text-shadow: 0 0 10px rgba(76,235,222,0.6), 3px 3px 0 var(--magenta-dark);
+  }
+  .sub{ color: var(--ink-soft); font-size:14px; margin:0; }
+
+  .panel{
+    background: var(--bg2); border-radius: 18px; border: 2px solid var(--line);
+    box-shadow: 0 6px 0 #0A0D2C, inset 0 0 30px rgba(76,235,222,0.03);
+    padding: 22px 18px; margin-bottom: 22px;
+  }
+  .panel h2.display{
+    font-size:22px; margin:0 0 14px; color: var(--cyan); display:flex; align-items:center; gap:8px;
+  }
+
+  /* TOP BAR */
+  .topbar{ display:flex; justify-content:center; gap:12px; margin-bottom: 20px; flex-wrap:wrap;}
+  .toolbtn{
+    font-family:'Noto Sans SC'; font-weight:800; font-size:13px; color: var(--bg);
+    background: var(--cyan); border:none; padding:10px 16px; border-radius:10px; cursor:pointer;
+    box-shadow: 0 3px 0 var(--cyan-dark);
+  }
+  .toolbtn.alt{ background: var(--magenta); box-shadow: 0 3px 0 var(--magenta-dark); }
+  .toolbtn:active{ transform: translateY(3px); box-shadow:none; }
+
+  /* STAGE MAP */
+  .stagegrid{
+    display:grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  }
+  .stage{
+    background: var(--bg3); border: 2px solid var(--line); border-radius: 14px;
+    padding: 14px 6px; text-align:center; cursor:pointer; transition: transform .15s, border-color .15s;
+    position:relative;
+  }
+  .stage:hover{ transform: translateY(-3px); border-color: var(--cyan); }
+  .stage .mon{ font-size: 34px; display:block; margin-bottom:6px; filter: drop-shadow(0 0 6px rgba(0,0,0,0.4)); }
+  .stage .lv{ font-family:'Press Start 2P'; font-size:9px; color: var(--yellow); }
+  .stage .lb{ font-size: 13px; color: var(--ink); margin-top:4px; font-weight:700; }
+  .stage.cleared{ border-color: var(--green); }
+  .stage.cleared::after{
+    content:'✔'; position:absolute; top:4px; right:6px; color: var(--green); font-weight:900; font-size:14px;
+  }
+  @media (max-width: 480px){
+    .stagegrid{ grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .stage .mon{ font-size: 26px; }
+    h1.display{ font-size: 28px; }
+  }
+
+  /* BATTLE */
+  #battleView{ display:none; }
+  .battle-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px; }
+  .exitbtn{
+    background: var(--red); color:#fff; border:none; width:32px; height:32px; border-radius:8px;
+    font-weight:900; cursor:pointer; box-shadow: 0 3px 0 var(--red-dark); font-size:14px;
+  }
+  .fighters{ display:flex; justify-content:space-between; align-items:flex-end; margin: 10px 0 18px; gap: 10px;}
+  .fighter{ flex:1; text-align:center; }
+  .fighter .sprite{ font-size: 54px; display:inline-block; transition: transform .15s; }
+  .fighter.shake .sprite{ animation: shake .35s; }
+  @keyframes shake{
+    0%,100%{ transform: translateX(0); } 25%{ transform: translateX(-8px) rotate(-6deg); }
+    75%{ transform: translateX(8px) rotate(6deg); }
+  }
+  .hpname{ font-size:12px; color: var(--ink-soft); margin-bottom:4px; font-weight:700; }
+  .hpbar-outer{
+    background: #0A0D2C; border: 2px solid var(--line); border-radius: 8px; height:16px;
+    overflow:hidden; margin-top:4px;
+  }
+  .hpbar-inner{
+    height:100%; background: linear-gradient(90deg, var(--green), #7CFFCB); transition: width .35s ease;
+  }
+  .hpbar-inner.playerbar{ background: linear-gradient(90deg, var(--cyan), #9DFFF6); }
+  .hpbar-inner.low{ background: linear-gradient(90deg, var(--red), #FF9A9A); }
+  .vs{ font-family:'Press Start 2P'; font-size:16px; color: var(--yellow); padding: 0 6px 10px;}
+
+  .qbox{
+    background: var(--bg3); border: 2px solid var(--line); border-radius:14px;
+    text-align:center; padding: 18px 10px; margin-bottom:14px;
+  }
+  .qbox .qtext{ font-family:'Press Start 2P'; font-size: 22px; color:#fff; }
+  .choices{ display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .choice{
+    font-family:'Press Start 2P'; font-size:16px; padding: 16px 6px; border-radius:12px;
+    background: var(--bg3); border: 2px solid var(--line); color: var(--ink); cursor:pointer;
+    transition: transform .1s;
+  }
+  .choice:hover{ border-color: var(--cyan); }
+  .choice:active{ transform: scale(0.96); }
+  .choice.right{ background: var(--green-dark); border-color: var(--green); }
+  .choice.wrong{ background: var(--red-dark); border-color: var(--red); }
+
+  .floatdmg{
+    position:absolute; font-family:'Press Start 2P'; font-size:14px; color: var(--yellow);
+    pointer-events:none; animation: floatUp 0.8s ease forwards;
+  }
+  @keyframes floatUp{
+    0%{ opacity:1; transform: translateY(0); }
+    100%{ opacity:0; transform: translateY(-40px); }
+  }
+
+  .overlay{
+    position:absolute; inset:0; background: rgba(10,13,44,0.92); display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:14px; border-radius:14px; z-index:10; text-align:center; padding:20px;
+  }
+  .overlay h3{ font-family:'ZCOOL QingKe HuangYou'; font-size:26px; margin:0; }
+  .stagewrap{ position:relative; }
+
+  /* TIME ATTACK */
+  #timeView{ display:none; }
+  .ta-top{ display:flex; justify-content:space-around; margin-bottom:16px; flex-wrap:wrap; gap:10px;}
+  .ta-stat{ text-align:center; }
+  .ta-stat .v{ font-family:'Press Start 2P'; font-size:20px; color: var(--yellow); }
+  .ta-stat .l{ font-size:11px; color: var(--ink-soft); }
+
+  /* REFERENCE TABLE */
+  #refModal{
+    display:none; position:fixed; inset:0; background: rgba(6,8,26,0.85); z-index:50;
+    align-items:center; justify-content:center; padding: 20px;
+  }
+  #refModal .inner{
+    background: var(--bg2); border-radius:16px; border:2px solid var(--line); padding: 18px;
+    max-width: 600px; width:100%; max-height: 85vh; overflow:auto;
+  }
+  table.reftable{ border-collapse:collapse; width:100%; font-size:12px; }
+  table.reftable th, table.reftable td{
+    border:1px solid var(--line); text-align:center; padding: 5px 3px; color: var(--ink);
+  }
+  table.reftable th{ background:#0A0D2C; color: var(--yellow); font-family:'Press Start 2P'; font-size:10px;}
+  table.reftable td.diag{ background: rgba(76,235,222,0.15); color: var(--cyan); font-weight:800;}
+
+  .closebtn{
+    display:block; margin: 14px auto 0; background: var(--red); color:#fff; border:none;
+    padding: 9px 20px; border-radius:10px; cursor:pointer; font-weight:800; box-shadow: 0 3px 0 var(--red-dark);
+  }
+
+  footer{ text-align:center; color: var(--ink-soft); font-size:11px; margin-top:6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <span class="eyebrow">登登 · 2026-08-12 挑战</span>
+    <h1 class="display">⚔️ 九九乘法闯关</h1>
+    <p class="sub">打怪兽，练乘法！选一关开始战斗吧～</p>
+  </div>
+
+  <div class="topbar">
+    <button class="toolbtn alt" onclick="openTimeAttack()">⏱ 限时挑战</button>
+    <button class="toolbtn" onclick="openRef()">📖 乘法表速查</button>
+  </div>
+
+  <!-- 关卡地图 -->
+  <div class="panel" id="mapView">
+    <h2 class="display">🗺️ 选择关卡</h2>
+    <div class="stagegrid" id="stageGrid"></div>
+  </div>
+
+  <!-- 战斗界面 -->
+  <div class="panel" id="battleView">
+    <div class="battle-head">
+      <span class="pixel" id="battleTitle" style="font-size:12px; color:var(--yellow);">LEVEL</span>
+      <button class="exitbtn" onclick="exitBattle()">✕</button>
+    </div>
+
+    <div class="stagewrap" id="stageWrap">
+      <div class="fighters">
+        <div class="fighter" id="playerFighter">
+          <span class="sprite">🧙</span>
+          <div class="hpname">登登 HP</div>
+          <div class="hpbar-outer"><div class="hpbar-inner playerbar" id="playerBar" style="width:100%"></div></div>
+        </div>
+        <div class="vs">VS</div>
+        <div class="fighter" id="monsterFighter">
+          <span class="sprite" id="monsterSprite">👾</span>
+          <div class="hpname" id="monsterName">怪兽 HP</div>
+          <div class="hpbar-outer"><div class="hpbar-inner" id="monsterBar" style="width:100%"></div></div>
+        </div>
+      </div>
+
+      <div class="qbox">
+        <div class="qtext" id="qtext">? × ? = ?</div>
+      </div>
+      <div class="choices" id="choices"></div>
+    </div>
+  </div>
+
+  <!-- 限时挑战 -->
+  <div class="panel" id="timeView">
+    <div class="battle-head">
+      <span class="pixel" style="font-size:12px; color:var(--yellow);">TIME ATTACK</span>
+      <button class="exitbtn" onclick="exitTimeAttack()">✕</button>
+    </div>
+    <div class="stagewrap" id="timeWrap">
+      <div class="ta-top">
+        <div class="ta-stat"><div class="v" id="taTime">60</div><div class="l">剩余秒数</div></div>
+        <div class="ta-stat"><div class="v" id="taScore">0</div><div class="l">当前得分</div></div>
+        <div class="ta-stat"><div class="v" id="taBest">0</div><div class="l">本次最高连击</div></div>
+      </div>
+      <div class="qbox"><div class="qtext" id="taQtext">? × ? = ?</div></div>
+      <div class="choices" id="taChoices"></div>
+    </div>
+  </div>
+
+  <footer>提示：每一关打的是「N的乘法口诀」，先把地图上的怪兽全部打败，再去限时挑战刷分！🌟</footer>
+</div>
+
+<!-- 乘法表速查弹窗 -->
+<div id="refModal">
+  <div class="inner">
+    <h2 class="display" style="color:var(--cyan); margin-top:0;">📖 九九乘法表</h2>
+    <div id="refTableBox"></div>
+    <button class="closebtn" onclick="closeRef()">关闭</button>
+  </div>
+</div>
+
+<script>
+/* ---------------- 数据 ---------------- */
+const monsters = {
+  2:{emoji:'🦑', name:'章鱼怪', hp:60},
+  3:{emoji:'👾', name:'像素怪', hp:70},
+  4:{emoji:'🐙', name:'墨鱼王', hp:80},
+  5:{emoji:'🦂', name:'蝎子精', hp:90},
+  6:{emoji:'🐺', name:'狼头怪', hp:100},
+  7:{emoji:'🦖', name:'恐龙兽', hp:110},
+  8:{emoji:'👹', name:'红面怪', hp:120},
+  9:{emoji:'🐉', name:'终极巨龙', hp:140},
+};
+const clearedStages = new Set();
+
+/* ---------------- 关卡地图 ---------------- */
+function buildMap(){
+  const grid = document.getElementById('stageGrid');
+  grid.innerHTML = '';
+  for(let n=2;n<=9;n++){
+    const m = monsters[n];
+    const div = document.createElement('div');
+    div.className = 'stage' + (clearedStages.has(n) ? ' cleared' : '');
+    div.innerHTML = `<span class="mon">${m.emoji}</span><div class="lv pixel">LV.${n-1}</div><div class="lb">${n} 的乘法</div>`;
+    div.onclick = () => startBattle(n);
+    grid.appendChild(div);
+  }
+}
+buildMap();
+
+/* ---------------- 出题工具 ---------------- */
+function makeQuestion(n){
+  const b = Math.floor(Math.random()*9) + 1;
+  const answer = n*b;
+  const flip = Math.random() < 0.5;
+  const text = flip ? `${n} × ${b}` : `${b} × ${n}`;
+  const opts = new Set([answer]);
+  while(opts.size < 4){
+    const delta = (Math.floor(Math.random()*5)+1) * (Math.random()<0.5?-1:1) * n;
+    const cand = answer + delta;
+    if(cand > 0 && cand !== answer) opts.add(cand);
+  }
+  const arr = Array.from(opts);
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  return { text, answer, options: arr };
+}
+
+/* ---------------- 战斗逻辑 ---------------- */
+let battle = null; // {n, monsterHp, monsterMaxHp, playerHp, current}
+
+function startBattle(n){
+  const m = monsters[n];
+  battle = { n, monsterHp: m.hp, monsterMaxHp: m.hp, playerHp: 100, locked:false };
+  document.getElementById('battleTitle').textContent = `LEVEL ${n-1} · ${n}的乘法`;
+  document.getElementById('monsterSprite').textContent = m.emoji;
+  document.getElementById('monsterName').textContent = m.name + ' HP';
+  document.getElementById('mapView').style.display = 'none';
+  document.getElementById('battleView').style.display = 'block';
+  removeOverlay();
+  updateBars();
+  nextQuestion();
+}
+
+function updateBars(){
+  const mPct = Math.max(0, battle.monsterHp/battle.monsterMaxHp*100);
+  const pPct = Math.max(0, battle.playerHp/100*100);
+  const mBar = document.getElementById('monsterBar');
+  const pBar = document.getElementById('playerBar');
+  mBar.style.width = mPct + '%';
+  pBar.style.width = pPct + '%';
+  mBar.classList.toggle('low', mPct < 30);
+  pBar.classList.toggle('low', pPct < 30);
+}
+
+function nextQuestion(){
+  battle.locked = false;
+  const q = makeQuestion(battle.n);
+  battle.current = q;
+  document.getElementById('qtext').textContent = q.text + ' = ?';
+  const box = document.getElementById('choices');
+  box.innerHTML = '';
+  q.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'choice';
+    btn.textContent = opt;
+    btn.onclick = () => answerBattle(opt, btn);
+    box.appendChild(btn);
+  });
+}
+
+function floatText(container, text){
+  const el = document.createElement('div');
+  el.className = 'floatdmg';
+  el.textContent = text;
+  el.style.left = '50%';
+  el.style.top = '0px';
+  container.style.position = 'relative';
+  container.appendChild(el);
+  setTimeout(()=>el.remove(), 800);
+}
+
+function answerBattle(opt, btn){
+  if(battle.locked) return;
+  battle.locked = true;
+  const correct = opt === battle.current.answer;
+  const allBtns = document.querySelectorAll('#choices .choice');
+  allBtns.forEach(b=>{
+    if(parseInt(b.textContent) === battle.current.answer) b.classList.add('right');
+    else if(b === btn) b.classList.add('wrong');
+  });
+
+  if(correct){
+    const dmg = Math.floor(Math.random()*10) + 18;
+    battle.monsterHp -= dmg;
+    document.getElementById('monsterFighter').classList.add('shake');
+    floatText(document.getElementById('monsterFighter'), '-'+dmg);
+    setTimeout(()=>document.getElementById('monsterFighter').classList.remove('shake'), 350);
+  } else {
+    const dmg = 15;
+    battle.playerHp -= dmg;
+    document.getElementById('playerFighter').classList.add('shake');
+    floatText(document.getElementById('playerFighter'), '-'+dmg);
+    setTimeout(()=>document.getElementById('playerFighter').classList.remove('shake'), 350);
+  }
+  updateBars();
+
+  setTimeout(()=>{
+    if(battle.monsterHp <= 0){
+      clearedStages.add(battle.n);
+      showOverlay('🎉 胜利！', `打败了 ${monsters[battle.n].name}！`, true);
+    } else if(battle.playerHp <= 0){
+      showOverlay('💥 被打倒了', '再试一次，你可以的！', false);
+    } else {
+      nextQuestion();
+    }
+  }, 700);
+}
+
+function showOverlay(title, msg, won){
+  removeOverlay();
+  const wrap = document.getElementById('stageWrap');
+  const ov = document.createElement('div');
+  ov.className = 'overlay';
+  ov.id = 'battleOverlay';
+  ov.innerHTML = `
+    <h3>${title}</h3>
+    <div>${msg}</div>
+    <div style="display:flex; gap:10px;">
+      ${won ? '<button class="toolbtn" onclick="exitBattle()">返回地图</button>' : '<button class="toolbtn alt" onclick="retryBattle()">再来一次</button><button class="toolbtn" onclick="exitBattle()">返回地图</button>'}
+    </div>
+  `;
+  wrap.appendChild(ov);
+}
+function removeOverlay(){
+  const ov = document.getElementById('battleOverlay');
+  if(ov) ov.remove();
+}
+function retryBattle(){
+  startBattle(battle.n);
+}
+function exitBattle(){
+  document.getElementById('battleView').style.display = 'none';
+  document.getElementById('mapView').style.display = 'block';
+  buildMap();
+}
+
+/* ---------------- 限时挑战 ---------------- */
+let ta = null;
+let sessionBest = 0;
+
+function openTimeAttack(){
+  document.getElementById('mapView').style.display = 'none';
+  document.getElementById('timeView').style.display = 'block';
+  ta = { time: 60, score: 0, streak: 0, bestStreak: 0, timer: null, locked:false };
+  document.getElementById('taTime').textContent = ta.time;
+  document.getElementById('taScore').textContent = ta.score;
+  document.getElementById('taBest').textContent = ta.bestStreak;
+  removeTaOverlay();
+  nextTaQuestion();
+  ta.timer = setInterval(tick, 1000);
+}
+function tick(){
+  ta.time--;
+  document.getElementById('taTime').textContent = ta.time;
+  if(ta.time <= 0){
+    clearInterval(ta.timer);
+    endTimeAttack();
+  }
+}
+function nextTaQuestion(){
+  ta.locked = false;
+  const n = Math.floor(Math.random()*8) + 2;
+  const q = makeQuestion(n);
+  ta.current = q;
+  document.getElementById('taQtext').textContent = q.text + ' = ?';
+  const box = document.getElementById('taChoices');
+  box.innerHTML = '';
+  q.options.forEach(opt=>{
+    const btn = document.createElement('button');
+    btn.className = 'choice';
+    btn.textContent = opt;
+    btn.onclick = () => answerTa(opt, btn);
+    box.appendChild(btn);
+  });
+}
+function answerTa(opt, btn){
+  if(ta.locked || ta.time<=0) return;
+  ta.locked = true;
+  const correct = opt === ta.current.answer;
+  const allBtns = document.querySelectorAll('#taChoices .choice');
+  allBtns.forEach(b=>{
+    if(parseInt(b.textContent) === ta.current.answer) b.classList.add('right');
+    else if(b===btn) b.classList.add('wrong');
+  });
+  if(correct){
+    ta.streak++;
+    ta.bestStreak = Math.max(ta.bestStreak, ta.streak);
+    const bonus = ta.streak >= 5 ? 3 : (ta.streak >= 3 ? 2 : 1);
+    ta.score += 10 * bonus;
+  } else {
+    ta.streak = 0;
+  }
+  document.getElementById('taScore').textContent = ta.score;
+  document.getElementById('taBest').textContent = ta.bestStreak;
+  setTimeout(()=>{ if(ta.time>0) nextTaQuestion(); }, 500);
+}
+function endTimeAttack(){
+  sessionBest = Math.max(sessionBest, ta.score);
+  const wrap = document.getElementById('timeWrap');
+  const ov = document.createElement('div');
+  ov.className = 'overlay';
+  ov.id = 'taOverlay';
+  ov.innerHTML = `
+    <h3>⏰ 时间到！</h3>
+    <div>本次得分：<b style="color:var(--yellow)">${ta.score}</b></div>
+    <div>本次最高连击：${ta.bestStreak}</div>
+    <div>历史最高分：${sessionBest}</div>
+    <div style="display:flex; gap:10px;">
+      <button class="toolbtn alt" onclick="openTimeAttack()">再来一次</button>
+      <button class="toolbtn" onclick="exitTimeAttack()">返回地图</button>
+    </div>
+  `;
+  wrap.appendChild(ov);
+}
+function removeTaOverlay(){
+  const ov = document.getElementById('taOverlay');
+  if(ov) ov.remove();
+}
+function exitTimeAttack(){
+  if(ta && ta.timer) clearInterval(ta.timer);
+  document.getElementById('timeView').style.display = 'none';
+  document.getElementById('mapView').style.display = 'block';
+}
+
+/* ---------------- 乘法表速查 ---------------- */
+function buildRefTable(){
+  let html = '<table class="reftable"><tr><th></th>';
+  for(let j=1;j<=9;j++) html += `<th>${j}</th>`;
+  html += '</tr>';
+  for(let i=1;i<=9;i++){
+    html += `<tr><th>${i}</th>`;
+    for(let j=1;j<=9;j++){
+      html += `<td class="${i===j?'diag':''}">${i*j}</td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</table>';
+  document.getElementById('refTableBox').innerHTML = html;
+}
+buildRefTable();
+function openRef(){ document.getElementById('refModal').style.display = 'flex'; }
+function closeRef(){ document.getElementById('refModal').style.display = 'none'; }
+</script>
+</body>
+</html>
