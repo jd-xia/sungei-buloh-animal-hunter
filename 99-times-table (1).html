@@ -34,7 +34,8 @@
 
   html,body{
     margin:0;
-    min-height:100%;
+    height:100%;
+    overflow:hidden;
     background:
       radial-gradient(circle at 15% 0%, rgba(87,214,196,0.10), transparent 45%),
       radial-gradient(circle at 100% 100%, rgba(255,193,69,0.08), transparent 40%),
@@ -44,47 +45,59 @@
   }
 
   .app{
-    max-width:1080px;
-    margin:0 auto;
-    padding:22px 16px 48px;
+    height:100vh;
+    width:100vw;
+    margin:0;
+    padding:10px 14px;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
   }
 
-  header.title-block{
-    text-align:center;
-    margin-bottom:18px;
-    color:#F3EFE1;
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-shrink:0;
+    padding:2px 4px 6px;
+    gap:10px;
   }
-  header.title-block h1{
+  .topbar h1{
     font-family:'ZCOOL KuaiLe', sans-serif;
-    font-size:clamp(28px, 5vw, 42px);
-    margin:0 0 6px;
-    letter-spacing:2px;
+    font-size:clamp(15px, 2.4vw, 20px);
+    margin:0;
+    letter-spacing:1px;
     color:#FFE8B8;
     text-shadow: 0 2px 0 rgba(0,0,0,0.25);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
   }
-  header.title-block p{
-    margin:0;
-    font-size:14px;
-    color:#BFE3D8;
-    line-height:1.6;
-  }
-  header.title-block .rule{
-    display:inline-block;
-    margin-top:8px;
-    padding:6px 14px;
-    background:rgba(87,214,196,0.14);
-    border:1px solid rgba(87,214,196,0.35);
+  .progress-toggle{
+    border:1px solid rgba(255,193,69,0.4);
+    padding:6px 12px;
     border-radius:999px;
-    font-size:12.5px;
-    color:#DFF7EF;
+    background:rgba(255,193,69,0.16);
+    color:#FFE8B8;
+    font-size:12px;
+    font-family:'Noto Sans SC', sans-serif;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    white-space:nowrap;
+    flex-shrink:0;
+    transition:background .15s ease, transform .12s ease;
   }
+  .progress-toggle:hover{ background:rgba(255,193,69,0.26); transform:translateY(-1px); }
+  .progress-toggle b{ color:var(--gold); font-family:'ZCOOL KuaiLe', sans-serif; font-size:13px; }
 
   .layout{
     display:flex;
-    gap:20px;
-    align-items:flex-start;
+    align-items:stretch;
     justify-content:center;
-    flex-wrap:wrap;
+    flex:1 1 auto;
+    min-height:0;
   }
 
   /* ---------- GAME PANEL ---------- */
@@ -92,10 +105,13 @@
     background:linear-gradient(180deg, #16443A, #103630);
     border:1px solid rgba(255,255,255,0.08);
     border-radius:22px;
-    padding:16px;
+    padding:14px;
     box-shadow:var(--shadow);
-    width:min(94vw, 460px);
-    flex-shrink:0;
+    flex:1 1 auto;
+    min-width:0;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
   }
 
   .question-bubble{
@@ -103,10 +119,11 @@
     background:var(--panel);
     border:2px solid var(--panel-edge);
     border-radius:16px;
-    padding:10px 14px;
+    padding:8px 14px;
     text-align:center;
-    margin-bottom:12px;
+    margin-bottom:10px;
     box-shadow: inset 0 -3px 0 rgba(0,0,0,0.05);
+    flex-shrink:0;
   }
   .question-bubble .qlabel{
     font-size:11px;
@@ -115,7 +132,7 @@
   }
   .question-bubble .qtext{
     font-family:'ZCOOL KuaiLe', sans-serif;
-    font-size:clamp(24px,6vw,32px);
+    font-size:clamp(20px,4vw,30px);
     color:var(--food-dark);
     line-height:1.2;
   }
@@ -131,14 +148,22 @@
     border-bottom:2px solid var(--panel-edge);
   }
 
+  .canvas-outer{
+    flex:1 1 auto;
+    min-height:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
   .canvas-wrap{
     position:relative;
-    width:100%;
-    aspect-ratio:1/1;
     border-radius:14px;
     overflow:hidden;
     border:3px solid #0B2C27;
     box-shadow: inset 0 0 0 2px rgba(255,255,255,0.05);
+    touch-action:none;
+    cursor:crosshair;
   }
   canvas#game{
     width:100%;
@@ -151,9 +176,10 @@
     display:flex;
     justify-content:space-between;
     align-items:center;
-    margin-top:10px;
+    margin-top:8px;
     color:#EAF6EE;
     font-size:13px;
+    flex-shrink:0;
   }
   .hud .score b{
     font-family:'ZCOOL KuaiLe', sans-serif;
@@ -184,33 +210,12 @@
   }
 
   .controls{
-    margin-top:14px;
+    margin-top:10px;
     display:flex;
     align-items:center;
-    justify-content:space-between;
-    gap:12px;
-    flex-wrap:wrap;
+    justify-content:center;
+    flex-shrink:0;
   }
-  .dpad{
-    display:grid;
-    grid-template-columns:44px 44px 44px;
-    grid-template-rows:44px 44px 44px;
-    gap:4px;
-  }
-  .dpad button{
-    border:none;
-    border-radius:10px;
-    background:rgba(255,255,255,0.10);
-    color:#EAF6EE;
-    font-size:18px;
-    cursor:pointer;
-  }
-  .dpad button:active{ background:var(--mint); color:#0B2C27; }
-  .dpad .up{grid-column:2;grid-row:1;}
-  .dpad .left{grid-column:1;grid-row:2;}
-  .dpad .mid{grid-column:2;grid-row:2; background:transparent;}
-  .dpad .right{grid-column:3;grid-row:2;}
-  .dpad .down{grid-column:2;grid-row:3;}
 
   .restart-btn{
     border:none;
@@ -267,21 +272,57 @@
     75%{ transform:translateX(4px); }
   }
 
-  /* ---------- PROGRESS PANEL ---------- */
+  /* ---------- PROGRESS PANEL (floating drawer) ---------- */
+  .drawer-backdrop{
+    position:fixed;
+    inset:0;
+    background:rgba(6,20,18,0.55);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease;
+    z-index:40;
+  }
+  .drawer-backdrop.show{ opacity:1; pointer-events:auto; }
+
   .progress-panel{
+    position:fixed;
+    top:0;
+    right:0;
+    bottom:0;
     background:var(--panel);
-    border:1px solid var(--panel-edge);
-    border-radius:22px;
+    border-left:1px solid var(--panel-edge);
     padding:16px;
-    box-shadow:var(--shadow);
-    width:min(94vw, 340px);
-    flex-shrink:0;
+    box-shadow:-12px 0 30px rgba(0,0,0,0.35);
+    width:min(88vw, 320px);
+    height:100%;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    z-index:50;
+    transform:translateX(100%);
+    transition:transform .28s ease;
+  }
+  .progress-panel.open{ transform:translateX(0); }
+  .progress-panel .drawer-close{
+    position:absolute;
+    top:10px;
+    right:10px;
+    width:28px;
+    height:28px;
+    border:none;
+    border-radius:50%;
+    background:rgba(0,0,0,0.08);
+    color:var(--ink-soft);
+    font-size:14px;
+    cursor:pointer;
+    line-height:1;
   }
   .progress-panel .panel-header{
     display:flex;
     justify-content:space-between;
     align-items:baseline;
     margin-bottom:10px;
+    padding-right:26px;
   }
   .progress-panel .panel-header h2{
     font-family:'ZCOOL KuaiLe', sans-serif;
@@ -343,18 +384,13 @@
     background:linear-gradient(160deg, var(--gold), var(--gold-dark));
     vertical-align:middle;
   }
-
-  @media (max-width:760px){
-    .layout{ flex-direction:column; align-items:center; }
-  }
 </style>
 </head>
 <body>
 <div class="app">
-  <header class="title-block">
-    <h1>🐍 贪吃蛇 · 九九乘法大冒险</h1>
-    <p>操作蛇宝宝吃到<b>正确答案</b>的果子，就能点亮乘法表格子！吃错也没关系，果子会重新长出来～</p>
-    <span class="rule">方向键 / WASD / 屏幕按钮 / 手指滑动 均可控制</span>
+  <header class="topbar">
+    <h1>🐍 贪吃蛇 · 九九乘法</h1>
+    <button class="progress-toggle" id="btnToggleProgress">📜 乘法表 <b id="progressBadge">0/81</b></button>
   </header>
 
   <div class="layout">
@@ -364,22 +400,24 @@
         <div class="qtext" id="qText">? × ? = ?</div>
       </div>
 
-      <div class="canvas-wrap" id="canvasWrap">
-        <canvas id="game"></canvas>
-        <div class="overlay" id="overlayStart">
-          <h2>准备好了吗？</h2>
-          <p>吃到正确答案的果子会让蛇变长、得分+10，还能点亮右边的乘法卷轴。撞到墙壁或自己的身体就会重新开始哦！</p>
-          <button class="big-btn" id="btnStart">开始游戏</button>
-        </div>
-        <div class="overlay hidden" id="overlayOver">
-          <h2>撞到啦！</h2>
-          <p id="overText">本局得分 0，点亮了 0 / 81 个乘法口诀</p>
-          <button class="big-btn" id="btnRetry">再来一次</button>
-        </div>
-        <div class="overlay hidden" id="overlayWin">
-          <h2>🎉 太棒了！</h2>
-          <p>你点亮了全部 81 个乘法口诀，九九乘法表全部通关！</p>
-          <button class="big-btn" id="btnWinRestart">再玩一轮</button>
+      <div class="canvas-outer" id="canvasOuter">
+        <div class="canvas-wrap" id="canvasWrap">
+          <canvas id="game"></canvas>
+          <div class="overlay" id="overlayStart">
+            <h2>准备好了吗？</h2>
+            <p>在场地上点一下鼠标，或用手指按住并拖动（iPad），蛇就会朝那个方向前进。吃到正确答案的果子会变长、得分+10，还能点亮乘法表。撞到墙壁或自己的身体就会重新开始哦！</p>
+            <button class="big-btn" id="btnStart">开始游戏</button>
+          </div>
+          <div class="overlay hidden" id="overlayOver">
+            <h2>撞到啦！</h2>
+            <p id="overText">本局得分 0，点亮了 0 / 81 个乘法口诀</p>
+            <button class="big-btn" id="btnRetry">再来一次</button>
+          </div>
+          <div class="overlay hidden" id="overlayWin">
+            <h2>🎉 太棒了！</h2>
+            <p>你点亮了全部 81 个乘法口诀，九九乘法表全部通关！</p>
+            <button class="big-btn" id="btnWinRestart">再玩一轮</button>
+          </div>
         </div>
       </div>
 
@@ -393,26 +431,21 @@
       </div>
 
       <div class="controls">
-        <div class="dpad">
-          <button class="up" data-dir="0,-1">▲</button>
-          <button class="left" data-dir="-1,0">◀</button>
-          <div class="mid"></div>
-          <button class="right" data-dir="1,0">▶</button>
-          <button class="down" data-dir="0,1">▼</button>
-        </div>
         <button class="restart-btn" id="btnReset">重新开始</button>
       </div>
     </section>
-
-    <aside class="progress-panel">
-      <div class="panel-header">
-        <h2>乘法口诀卷</h2>
-        <div class="count">已点亮 <b id="progressCount">0</b> / 81</div>
-      </div>
-      <div class="mult-grid" id="multGrid"></div>
-      <div class="legend"><span class="dot"></span>金色格子 = 已经学会的乘法口诀</div>
-    </aside>
   </div>
+
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <aside class="progress-panel" id="progressPanel">
+    <button class="drawer-close" id="btnCloseDrawer">✕</button>
+    <div class="panel-header">
+      <h2>乘法口诀卷</h2>
+      <div class="count">已点亮 <b id="progressCount">0</b> / 81</div>
+    </div>
+    <div class="mult-grid" id="multGrid"></div>
+    <div class="legend"><span class="dot"></span>金色格子 = 已经学会的乘法口诀</div>
+  </aside>
 </div>
 
 <script>
@@ -429,6 +462,7 @@
   const qText = document.getElementById('qText');
   const scoreText = document.getElementById('scoreText');
   const progressCount = document.getElementById('progressCount');
+  const progressBadge = document.getElementById('progressBadge');
   const multGrid = document.getElementById('multGrid');
   const overlayStart = document.getElementById('overlayStart');
   const overlayOver = document.getElementById('overlayOver');
@@ -454,6 +488,7 @@
 
   function updateProgressUI(justKey){
     progressCount.textContent = collected.size;
+    progressBadge.textContent = collected.size+'/81';
     if(justKey && cellRefs[justKey]){
       const el = cellRefs[justKey];
       el.classList.add('solved');
@@ -464,9 +499,19 @@
   }
 
   // ---------- CANVAS SIZING ----------
+  const canvasOuter = document.getElementById('canvasOuter');
+
   function resizeCanvas(){
-    const rect = canvasWrap.getBoundingClientRect();
-    const size = Math.floor(rect.width);
+    // let the wrap go back to natural size so we can measure the true
+    // available box inside canvas-outer, then fit the largest square
+    canvasWrap.style.width = '';
+    canvasWrap.style.height = '';
+    const rect = canvasOuter.getBoundingClientRect();
+    const size = Math.max(120, Math.floor(Math.min(rect.width, rect.height)) - 2);
+
+    canvasWrap.style.width = size+'px';
+    canvasWrap.style.height = size+'px';
+
     const dpr = window.devicePixelRatio || 1;
     canvas.style.width = size+'px';
     canvas.style.height = size+'px';
@@ -714,6 +759,31 @@
         ctx.beginPath(); ctx.arc(e2x,e2y,eyeR,0,Math.PI*2); ctx.fill();
       }
     });
+
+    // aim marker: shows where the mouse click / finger drag is pointing
+    if(aimMarker.show){
+      const head = snake[0];
+      const hx = head.x*cellPx + cellPx/2;
+      const hy = head.y*cellPx + cellPx/2;
+      ctx.strokeStyle = 'rgba(255,193,69,0.85)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5,5]);
+      ctx.beginPath();
+      ctx.moveTo(hx, hy);
+      ctx.lineTo(aimMarker.x, aimMarker.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.strokeStyle = '#FFC145';
+      ctx.lineWidth = 2.5;
+      const s = cellPx*0.32;
+      ctx.beginPath();
+      ctx.moveTo(aimMarker.x-s, aimMarker.y);
+      ctx.lineTo(aimMarker.x+s, aimMarker.y);
+      ctx.moveTo(aimMarker.x, aimMarker.y-s);
+      ctx.lineTo(aimMarker.x, aimMarker.y+s);
+      ctx.stroke();
+    }
   }
 
   function roundRect(ctx,x,y,w,h,r){
@@ -740,30 +810,56 @@
     else if(k==='arrowright' || k==='d') setDir(1,0);
   }, {passive:false});
 
-  document.querySelectorAll('.dpad button[data-dir]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const [x,y] = btn.dataset.dir.split(',').map(Number);
-      setDir(x,y);
-    });
-  });
+  // point-to-steer controls: mouse click sets a direction once,
+  // touch (iPad) press-and-drag continuously guides the direction
+  // toward wherever the finger currently is, relative to the snake head.
+  let pointerActive = false;
+  let aimMarker = {show:false, x:0, y:0};
 
-  // swipe controls
-  let touchStartX=0, touchStartY=0;
-  canvasWrap.addEventListener('touchstart', (e)=>{
-    const t = e.changedTouches[0];
-    touchStartX = t.clientX; touchStartY = t.clientY;
-  }, {passive:true});
-  canvasWrap.addEventListener('touchend', (e)=>{
-    const t = e.changedTouches[0];
-    const dx = t.clientX - touchStartX;
-    const dy = t.clientY - touchStartY;
-    if(Math.abs(dx) < 18 && Math.abs(dy) < 18) return;
+  function aimDirFromPoint(clientX, clientY){
+    const rect = canvas.getBoundingClientRect();
+    const px = clientX - rect.left;
+    const py = clientY - rect.top;
+    aimMarker.show = true;
+    aimMarker.x = px;
+    aimMarker.y = py;
+
+    const head = snake[0];
+    const hx = head.x*cellPx + cellPx/2;
+    const hy = head.y*cellPx + cellPx/2;
+    const dx = px - hx;
+    const dy = py - hy;
+
+    // ignore taps too close to the head to avoid jitter
+    if(Math.abs(dx) < cellPx*0.4 && Math.abs(dy) < cellPx*0.4) return;
+
     if(Math.abs(dx) > Math.abs(dy)){
       setDir(dx>0?1:-1, 0);
     } else {
       setDir(0, dy>0?1:-1);
     }
-  }, {passive:true});
+    render();
+  }
+
+  canvasWrap.addEventListener('pointerdown', (e)=>{
+    pointerActive = true;
+    aimDirFromPoint(e.clientX, e.clientY);
+  });
+  canvasWrap.addEventListener('pointermove', (e)=>{
+    if(!pointerActive) return;
+    e.preventDefault();
+    aimDirFromPoint(e.clientX, e.clientY);
+  }, {passive:false});
+  window.addEventListener('pointerup', ()=>{
+    pointerActive = false;
+    aimMarker.show = false;
+    render();
+  });
+  canvasWrap.addEventListener('pointercancel', ()=>{
+    pointerActive = false;
+    aimMarker.show = false;
+    render();
+  });
 
   // speed buttons
   document.querySelectorAll('.pill-btn[data-speed]').forEach(btn=>{
@@ -802,6 +898,7 @@
       }
     }
     progressCount.textContent = 0;
+    progressBadge.textContent = '0/81';
     startRun();
   });
   document.getElementById('btnReset').addEventListener('click', ()=>{
@@ -809,6 +906,27 @@
     overlayWin.classList.add('hidden');
     startRun();
   });
+
+  // ---------- PROGRESS DRAWER ----------
+  const progressPanel = document.getElementById('progressPanel');
+  const drawerBackdrop = document.getElementById('drawerBackdrop');
+  const btnToggleProgress = document.getElementById('btnToggleProgress');
+  const btnCloseDrawer = document.getElementById('btnCloseDrawer');
+
+  function openDrawer(){
+    progressPanel.classList.add('open');
+    drawerBackdrop.classList.add('show');
+  }
+  function closeDrawer(){
+    progressPanel.classList.remove('open');
+    drawerBackdrop.classList.remove('show');
+  }
+  btnToggleProgress.addEventListener('click', ()=>{
+    if(progressPanel.classList.contains('open')) closeDrawer();
+    else openDrawer();
+  });
+  btnCloseDrawer.addEventListener('click', closeDrawer);
+  drawerBackdrop.addEventListener('click', closeDrawer);
 
   // ---------- INIT ----------
   resizeCanvas();
