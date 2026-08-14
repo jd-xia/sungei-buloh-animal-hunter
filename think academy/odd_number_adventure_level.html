@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Odd Number Adventure - Level 38</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Trebuchet MS", Arial, sans-serif;
+    min-height: 100vh;
+    background: linear-gradient(#7ec8e3 0%, #4f9f68 48%, #246b45 100%);
+    color: #33230f;
+    overflow-x: hidden;
+  }
+  .game {
+    max-width: 1200px;
+    margin: auto;
+    min-height: 100vh;
+    padding: 18px;
+    position: relative;
+  }
+  .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+  }
+  .title {
+    background: #704214;
+    color: #fff5c7;
+    border: 5px solid #b87922;
+    border-radius: 18px;
+    padding: 12px 22px;
+    box-shadow: 0 7px 0 #4a2a0d;
+    font-size: clamp(22px, 4vw, 38px);
+    font-weight: 900;
+    text-shadow: 2px 2px #3c210c;
+  }
+  .stats {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .stat {
+    background: #fff7d5;
+    border: 4px solid #b87922;
+    border-radius: 16px;
+    padding: 9px 15px;
+    font-weight: 900;
+    box-shadow: 0 4px 0 #6b431b;
+    min-width: 100px;
+    text-align: center;
+  }
+  .main {
+    margin-top: 24px;
+    background: rgba(255, 248, 215, .96);
+    border: 7px solid #8c5b20;
+    border-radius: 28px;
+    padding: 24px;
+    box-shadow: 0 12px 0 rgba(62, 39, 12, .5);
+  }
+  .level {
+    color: #b13c1d;
+    font-size: 22px;
+    font-weight: 900;
+    text-align: center;
+  }
+  h1 {
+    text-align: center;
+    font-size: clamp(25px, 5vw, 45px);
+    margin: 8px 0 18px;
+  }
+  .question {
+    text-align: center;
+    font-size: clamp(21px, 3.5vw, 32px);
+    font-weight: 900;
+    line-height: 1.35;
+    margin: 12px auto 24px;
+    max-width: 900px;
+  }
+  .equation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin: 18px 0 28px;
+  }
+  .chest {
+    width: 105px;
+    height: 78px;
+    border-radius: 15px;
+    border: 5px solid #8b5518;
+    background: linear-gradient(#4b9ad8 0 50%, #276da5 50%);
+    position: relative;
+    box-shadow: 0 6px 0 #5b3611;
+  }
+  .chest:nth-child(3) { background: linear-gradient(#73b955 0 50%, #478b32 50%); }
+  .chest:nth-child(5) { background: linear-gradient(#a66dd1 0 50%, #7040a4 50%); }
+  .lock {
+    position: absolute;
+    left: 39px;
+    top: 31px;
+    width: 27px;
+    height: 28px;
+    border-radius: 6px;
+    background: #ffd34d;
+    border: 3px solid #9a6515;
+  }
+  .lock:before {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: -17px;
+    width: 12px;
+    height: 17px;
+    border: 4px solid #9a6515;
+    border-bottom: 0;
+    border-radius: 10px 10px 0 0;
+  }
+  .plus, .equals {
+    font-size: 42px;
+    font-weight: 900;
+  }
+  .sum {
+    font-size: 48px;
+    color: #c0391b;
+    font-weight: 1000;
+  }
+  .hint {
+    background: #e9f4d6;
+    border: 4px dashed #66934d;
+    border-radius: 18px;
+    padding: 15px 20px;
+    max-width: 850px;
+    margin: 0 auto 24px;
+    font-size: 19px;
+    line-height: 1.45;
+  }
+  .hint b { color: #a4371b; }
+  .choices {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    max-width: 850px;
+    margin: 0 auto;
+  }
+  button.answer {
+    border: 5px solid #87602e;
+    border-radius: 18px;
+    background: #f4ead1;
+    padding: 18px 8px;
+    font-size: 32px;
+    font-weight: 1000;
+    cursor: pointer;
+    box-shadow: 0 7px 0 #71501f;
+    transition: transform .12s, box-shadow .12s;
+  }
+  button.answer:hover { transform: translateY(-4px); }
+  button.answer:active {
+    transform: translateY(5px);
+    box-shadow: 0 2px 0 #71501f;
+  }
+  button.answer.correct { background: #a9e681; border-color: #478a31; }
+  button.answer.wrong { background: #f39a8d; border-color: #a6382a; }
+  .message {
+    text-align: center;
+    min-height: 55px;
+    margin: 22px auto 0;
+    font-size: 23px;
+    font-weight: 1000;
+  }
+  .actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .action {
+    border: 0;
+    border-radius: 14px;
+    padding: 12px 20px;
+    font-size: 17px;
+    font-weight: 900;
+    cursor: pointer;
+    background: #704214;
+    color: white;
+  }
+  .action:hover { background: #8d5720; }
+  .progress {
+    margin-top: 26px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+  }
+  .bubble {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #f1d35d;
+    border: 4px solid #8a671c;
+    font-weight: 1000;
+  }
+  .bubble.active {
+    background: #ffb72f;
+    transform: scale(1.15);
+  }
+  .bubble.future { background: #d7d7d7; }
+  .footer {
+    text-align: center;
+    color: #fff;
+    font-weight: 900;
+    margin: 22px 0;
+    text-shadow: 1px 2px #31582e;
+  }
+  .confetti {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .piece {
+    position: absolute;
+    width: 10px;
+    height: 18px;
+    animation: fall 1.5s linear forwards;
+  }
+  @keyframes fall {
+    from { transform: translateY(-30px) rotate(0deg); opacity: 1; }
+    to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+  @media (max-width: 700px) {
+    .game { padding: 10px; }
+    .top { flex-direction: column; align-items: stretch; }
+    .stats { justify-content: center; }
+    .main { padding: 16px 10px; }
+    .choices { grid-template-columns: repeat(2, 1fr); }
+    .chest { width: 80px; height: 62px; }
+    .lock { left: 27px; top: 23px; }
+    .plus, .equals { font-size: 30px; }
+    .sum { font-size: 36px; }
+  }
+</style>
+</head>
+<body>
+<div class="game">
+  <div class="top">
+    <div class="title">🏆 Odd Number Adventure</div>
+    <div class="stats">
+      <div class="stat">⭐ Score<br><span id="score">0</span></div>
+      <div class="stat">🔥 Streak<br><span id="streak">0</span></div>
+      <div class="stat">⏱️ Time<br><span id="time">30</span>s</div>
+    </div>
+  </div>
+
+  <section class="main">
+    <div class="level">LEVEL 38</div>
+    <h1>Unlock the Treasure Chest! 🗝️</h1>
+
+    <div class="question">
+      The sum of three consecutive odd numbers is <span style="color:#c0391b">75</span>.<br>
+      What is the <span style="color:#c0391b">largest natural number</span> among them?
+    </div>
+
+    <div class="equation">
+      <div class="chest"><div class="lock"></div></div>
+      <div class="plus">+</div>
+      <div class="chest"><div class="lock"></div></div>
+      <div class="plus">+</div>
+      <div class="chest"><div class="lock"></div></div>
+      <div class="equals">=</div>
+      <div class="sum">75</div>
+    </div>
+
+    <div class="hint">
+      🦉 <b>Think like a math explorer!</b><br>
+      Consecutive odd numbers always increase by <b>2</b>.<br>
+      So the three numbers look like: <b>n, n + 2, n + 4</b>.<br>
+      💡 Try finding the <b>middle number first</b>!
+    </div>
+
+    <div class="choices">
+      <button class="answer" onclick="choose(this,23)">23</button>
+      <button class="answer" onclick="choose(this,25)">25</button>
+      <button class="answer" onclick="choose(this,27)">27</button>
+      <button class="answer" onclick="choose(this,29)">29</button>
+    </div>
+
+    <div class="message" id="message"></div>
+
+    <div class="actions">
+      <button class="action" onclick="showHint()">💡 Show Me a Hint</button>
+      <button class="action" onclick="resetGame()">🔄 Try Again</button>
+    </div>
+
+    <div class="progress">
+      <div class="bubble">35</div>
+      <div class="bubble">36</div>
+      <div class="bubble">37</div>
+      <div class="bubble active">38</div>
+      <div class="bubble future">39</div>
+      <div class="bubble future">40</div>
+    </div>
+  </section>
+
+  <div class="footer">🌲 Solve the puzzle • Unlock the treasure • Become a Math Explorer! 🌲</div>
+</div>
+
+<div class="confetti" id="confetti"></div>
+
+<script>
+let score = 0;
+let streak = 0;
+let time = 30;
+let timer = null;
+let finished = false;
+
+function startTimer() {
+  clearInterval(timer);
+  timer = setInterval(() => {
+    if (finished) return;
+    time--;
+    document.getElementById("time").textContent = time;
+    if (time <= 0) {
+      clearInterval(timer);
+      finished = true;
+      document.getElementById("message").innerHTML =
+        "⏰ Time's up! The treasure is still locked. Try again!";
+    }
+  }, 1000);
+}
+
+function choose(btn, value) {
+  if (finished) return;
+
+  if (value === 27) {
+    finished = true;
+    clearInterval(timer);
+    btn.classList.add("correct");
+    score += 100 + time * 5;
+    streak++;
+    document.getElementById("score").textContent = score;
+    document.getElementById("streak").textContent = streak;
+    document.getElementById("message").innerHTML =
+      "🎉 Treasure unlocked! <b>23 + 25 + 27 = 75</b>.<br>" +
+      "The largest number is <b>27</b>!";
+
+    celebrate();
+  } else {
+    btn.classList.add("wrong");
+    streak = 0;
+    document.getElementById("streak").textContent = streak;
+    document.getElementById("message").innerHTML =
+      "🤔 Not quite. Remember: consecutive odd numbers differ by <b>2</b>. Try again!";
+    setTimeout(() => btn.classList.remove("wrong"), 700);
+  }
+}
+
+function showHint() {
+  document.getElementById("message").innerHTML =
+    "💡 Hint: The middle number is <b>75 ÷ 3 = 25</b>.<br>" +
+    "So the numbers are <b>23, 25, 27</b>. What is the largest?";
+}
+
+function resetGame() {
+  score = 0;
+  streak = 0;
+  time = 30;
+  finished = false;
+  document.getElementById("score").textContent = 0;
+  document.getElementById("streak").textContent = 0;
+  document.getElementById("time").textContent = 30;
+  document.getElementById("message").textContent = "";
+  document.querySelectorAll(".answer").forEach(b => b.classList.remove("correct","wrong"));
+  startTimer();
+}
+
+function celebrate() {
+  const box = document.getElementById("confetti");
+  for (let i = 0; i < 70; i++) {
+    const p = document.createElement("div");
+    p.className = "piece";
+    p.style.left = Math.random() * 100 + "%";
+    p.style.background = ["#f5c542","#e85d4a","#5aa9e6","#72b84b","#a66dd1"][i % 5];
+    p.style.animationDelay = Math.random() * .5 + "s";
+    p.style.transform = "rotate(" + Math.random()*360 + "deg)";
+    box.appendChild(p);
+    setTimeout(() => p.remove(), 2200);
+  }
+}
+
+startTimer();
+</script>
+</body>
+</html>
