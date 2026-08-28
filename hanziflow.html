@@ -278,6 +278,8 @@ function createWriterFor(char, speed, delay){
   });
 }
 
+let playToken = 0; // invalidates stale animateCharacter callbacks after a jump/speed-change/restart
+
 function next(){
   if (mode !== 'practice' || !playing || !sequence.length) return;
   clearActive();
@@ -286,6 +288,7 @@ function next(){
   const item = sequence[idx];
   setActive(idx);
   const strokePauseMs = secondsPerStroke * 1000;
+  const myToken = ++playToken; // this character "owns" this token
 
   if (isHanzi(item.char)){
     pinyinBigEl.textContent = item.py || '';
@@ -293,13 +296,19 @@ function next(){
     writer = createWriterFor(item.char, speed, delay);
     writer.animateCharacter({
       onComplete: () => {
-        // brief pause on the finished character before moving to the next one
-        timer = setTimeout(next, Math.max(strokePauseMs, 250));
+        if (myToken !== playToken) return; // a newer character has since taken over — ignore this stale callback
+        timer = setTimeout(() => {
+          if (myToken !== playToken) return;
+          next();
+        }, Math.max(strokePauseMs, 250));
       }
     });
   } else {
     pinyinBigEl.textContent = '';
-    timer = setTimeout(next, strokePauseMs);
+    timer = setTimeout(() => {
+      if (myToken !== playToken) return;
+      next();
+    }, strokePauseMs);
   }
 }
 
