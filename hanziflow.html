@@ -98,6 +98,8 @@
   .pace-row{ display:flex; align-items:center; gap:10px; margin-top:4px; font-size:14px; }
   .pace-row input[type=range]{ width:180px; padding:0; }
   .pace-label{ font-size:13px; color:#8a8aa0; }
+  .read-status{ font-size:13px; color:#8a8aa0; min-height:20px; text-align:center;}
+  .read-status.warn{ color:#c45c26; font-weight:700;}
 
   footer{ margin-top:22px; font-size:12px; color:#b0b0c5; text-align:center;}
   .hidden{ display:none !important; }
@@ -159,7 +161,9 @@
   <div class="rate-row">
     朗读语速
     <input type="range" id="rateRange" min="0.5" max="1.5" step="0.1" value="0.9">
+    <span id="rateLabel">0.9×</span>
   </div>
+  <div class="read-status" id="readStatus">点击开始，听整篇文章朗读</div>
 </div>
 
 <footer>点击"逐字滚动"里的任意字，可以单独查看该字的笔顺 👆　朗读功能依赖浏览器自带的语音朗读，效果因浏览器而异</footer>
@@ -175,19 +179,77 @@ let timer = null;
 let mode = 'practice';  // 'practice' | 'reading'
 let writer = null;
 let reading = false;
-let utterance = null;
+let pausedReading = false;
+let chineseVoice = null;
+let keepAliveTimer = null;
+let highlightTimer = null;
+let speakToken = 0;
+let sentenceQueue = [];
+let sentencePos = 0;
 
 const passageEl = document.getElementById('passage');
 const filmstripEl = document.getElementById('filmstrip');
 const pinyinBigEl = document.getElementById('pinyinBig');
 const playBtn = document.getElementById('playBtn');
 const readBtn = document.getElementById('readBtn');
+const readStatus = document.getElementById('readStatus');
+const rateRange = document.getElementById('rateRange');
+const rateLabel = document.getElementById('rateLabel');
+
+function setReadStatus(text, warn){
+  readStatus.textContent = text;
+  readStatus.className = 'read-status' + (warn ? ' warn' : '');
+}
+
+function pickChineseVoice(){
+  if (!('speechSynthesis' in window)) { chineseVoice = null; return null; }
+  const voices = speechSynthesis.getVoices() || [];
+  const preferred = voices.find(v => /zh-CN/i.test(v.lang) && /female|xiaoxiao|tingting|huihui|yaoyao|google/i.test(v.name))
+    || voices.find(v => /zh-CN/i.test(v.lang))
+    || voices.find(v => /^zh/i.test(v.lang) || /chinese|中文|普通话|国语/i.test(v.name));
+  chineseVoice = preferred || null;
+  return chineseVoice;
+}
+
+function ensureVoices(){
+  if (!('speechSynthesis' in window)) return;
+  pickChineseVoice();
+  speechSynthesis.onvoiceschanged = () => pickChineseVoice();
+}
+ensureVoices();
+
+function stopSpeechKeepAlive(){
+  if (keepAliveTimer) { clearInterval(keepAliveTimer); keepAliveTimer = null; }
+}
+function startSpeechKeepAlive(){
+  // Chrome often stops long utterances unless speechSynthesis is nudged.
+  stopSpeechKeepAlive();
+  keepAliveTimer = setInterval(() => {
+    if (!reading || pausedReading) return;
+    try {
+      speechSynthesis.pause();
+      speechSynthesis.resume();
+    } catch (e) {}
+  }, 8000);
+}
+
+function stopReading(resetButton){
+  speakToken++;
+  clearTimeout(highlightTimer);
+  stopSpeechKeepAlive();
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  reading = false;
+  pausedReading = false;
+  sentenceQueue = [];
+  sentencePos = 0;
+  if (resetButton !== false) readBtn.textContent = '▶️ 开始朗读';
+  clearActive();
+}
 
 function buildFromText(rawText){
   clearTimeout(timer);
-  speechSynthesis.cancel();
-  reading = false;
-  readBtn.textContent = '▶️ 开始朗读';
+  stopReading();
+  setReadStatus('点击开始，听整篇文章朗读');
 
   passageEl.innerHTML = '';
   filmstripEl.innerHTML = '';
@@ -249,8 +311,10 @@ function setActive(i){
   if (!item) return;
   item.wordEl.classList.add('active');
   item.cellEl.classList.add('now');
-  item.cellEl.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
-  item.wordEl.scrollIntoView({ behavior:'smooth', inline:'nearest', block:'nearest' });
+  // Only nudge the filmstrip sideways — never scroll the page
+  const cell = item.cellEl;
+  const left = cell.offsetLeft - (filmstripEl.clientWidth - cell.offsetWidth) / 2;
+  filmstripEl.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
 }
 
 // HanziWriter draws each stroke over ~400ms at strokeAnimationSpeed = 1.
@@ -374,7 +438,8 @@ tabPractice.addEventListener('click', () => {
   mode = 'practice';
   tabPractice.classList.add('on'); tabRead.classList.remove('on');
   practicePanel.classList.remove('hidden'); readPanel.classList.add('hidden');
-  speechSynthesis.cancel(); reading = false; readBtn.textContent = '▶️ 开始朗读';
+  stopReading();
+  setReadStatus('点击开始，听整篇文章朗读');
   clearActive();
   playing = true; playBtn.textContent = '⏸ 暂停';
   next();
@@ -386,38 +451,180 @@ tabRead.addEventListener('click', () => {
   tabRead.classList.add('on'); tabPractice.classList.remove('on');
   readPanel.classList.remove('hidden'); practicePanel.classList.add('hidden');
   clearTimeout(timer);
+  playToken++; // stop practice animation callbacks
   clearActive();
+  pickChineseVoice();
+  if (!('speechSynthesis' in window)) {
+    setReadStatus('当前浏览器不支持语音朗读，请换 Chrome / Edge 试试', true);
+  } else if (!chineseVoice) {
+    setReadStatus('未检测到中文语音，仍可尝试朗读（效果可能不佳）', true);
+  } else {
+    setReadStatus('将使用：' + chineseVoice.name);
+  }
 });
 
 // ---- whole-article reading (Web Speech API) ----
-function speakAll(){
-  if (!('speechSynthesis' in window)) { alert('您的浏览器不支持语音朗读功能'); return; }
-  speechSynthesis.cancel();
-  const text = sequence.map(s => s.char).join('');
-  utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'zh-CN';
-  utterance.rate = parseFloat(document.getElementById('rateRange').value);
-  utterance.onboundary = (e) => {
-    if (typeof e.charIndex === 'number'){
-      clearActive();
-      // find nearest sequence item at/after this char offset
-      setActive(Math.min(e.charIndex, sequence.length - 1));
+function splitIntoSentences(items){
+  // Build sentence chunks with their start index in `sequence`
+  const chunks = [];
+  let buf = '';
+  let start = 0;
+  for (let i = 0; i < items.length; i++) {
+    buf += items[i].char;
+    if (/[。！？；.!?;]/.test(items[i].char) || i === items.length - 1) {
+      const text = buf.trim();
+      if (text) chunks.push({ text, start, end: i });
+      buf = '';
+      start = i + 1;
     }
-  };
-  utterance.onend = () => { clearActive(); reading = false; readBtn.textContent = '▶️ 开始朗读'; };
-  utterance.onerror = () => { reading = false; readBtn.textContent = '▶️ 开始朗读'; };
-  speechSynthesis.speak(utterance);
-  reading = true; readBtn.textContent = '⏸ 朗读中…';
+  }
+  if (!chunks.length && items.length) {
+    chunks.push({ text: items.map(s => s.char).join(''), start: 0, end: items.length - 1 });
+  }
+  return chunks;
 }
 
-readBtn.addEventListener('click', () => {
-  if (!reading) speakAll();
-});
-document.getElementById('stopReadBtn').addEventListener('click', () => {
+function highlightRangeProgress(start, end, rate, token){
+  clearTimeout(highlightTimer);
+  const count = Math.max(1, end - start + 1);
+  // ~280ms per Chinese char at rate 1.0; punctuation a bit faster
+  let i = start;
+  const tick = () => {
+    if (token !== speakToken || !reading || pausedReading) return;
+    if (i > end) return;
+    clearActive();
+    setActive(i);
+    const ch = sequence[i] ? sequence[i].char : '';
+    const base = isHanzi(ch) ? 280 : 120;
+    const delay = Math.max(60, base / rate);
+    i++;
+    highlightTimer = setTimeout(tick, delay);
+  };
+  tick();
+}
+
+function speakSentenceAt(pos, token){
+  if (token !== speakToken || !reading) return;
+  if (pos >= sentenceQueue.length) {
+    stopReading();
+    setReadStatus('朗读完成 ✓');
+    return;
+  }
+
+  sentencePos = pos;
+  const chunk = sentenceQueue[pos];
+  const rate = parseFloat(rateRange.value) || 0.9;
+  const utt = new SpeechSynthesisUtterance(chunk.text);
+  utt.lang = 'zh-CN';
+  utt.rate = rate;
+  utt.pitch = 1;
+  if (chineseVoice) utt.voice = chineseVoice;
+
+  // Fallback highlighter (Chinese engines often skip onboundary)
+  highlightRangeProgress(chunk.start, chunk.end, rate, token);
+
+  utt.onboundary = (e) => {
+    if (token !== speakToken || typeof e.charIndex !== 'number') return;
+    // Map utterance-local index to sequence index
+    const seqIndex = Math.min(chunk.start + e.charIndex, chunk.end);
+    clearTimeout(highlightTimer); // boundary is more accurate when available
+    clearActive();
+    setActive(seqIndex);
+  };
+
+  utt.onend = () => {
+    if (token !== speakToken) return;
+    clearTimeout(highlightTimer);
+    // small gap between sentences feels more natural
+    setTimeout(() => speakSentenceAt(pos + 1, token), 180);
+  };
+
+  utt.onerror = (e) => {
+    if (token !== speakToken) return;
+    // 'interrupted' / 'canceled' are expected when stopping
+    if (e.error === 'interrupted' || e.error === 'canceled') return;
+    stopReading();
+    setReadStatus('朗读出错：' + (e.error || 'unknown') + '。请再试一次，或换 Chrome / Edge。', true);
+  };
+
+  // Chrome: cancel() then immediate speak() often fails silently — delay slightly
+  setTimeout(() => {
+    if (token !== speakToken || !reading || pausedReading) return;
+    speechSynthesis.speak(utt);
+  }, 40);
+}
+
+function startReading(){
+  if (!('speechSynthesis' in window)) {
+    setReadStatus('您的浏览器不支持语音朗读功能', true);
+    alert('您的浏览器不支持语音朗读功能，请使用 Chrome 或 Edge');
+    return;
+  }
+  if (!sequence.length) {
+    setReadStatus('请先生成文章内容', true);
+    return;
+  }
+
+  pickChineseVoice();
+  stopReading(false);
+  const token = ++speakToken;
+  sentenceQueue = splitIntoSentences(sequence);
+  sentencePos = 0;
+  reading = true;
+  pausedReading = false;
+  readBtn.textContent = '⏸ 暂停';
+  setReadStatus(chineseVoice ? ('朗读中…（' + chineseVoice.name + '）') : '朗读中…');
+  startSpeechKeepAlive();
+
+  // Prime synthesis engine (helps some browsers after cancel)
   speechSynthesis.cancel();
-  reading = false;
-  readBtn.textContent = '▶️ 开始朗读';
-  clearActive();
+  setTimeout(() => speakSentenceAt(0, token), 80);
+}
+
+function pauseReading(){
+  if (!reading || pausedReading) return;
+  pausedReading = true;
+  clearTimeout(highlightTimer);
+  stopSpeechKeepAlive();
+  try { speechSynthesis.pause(); } catch (e) {}
+  readBtn.textContent = '▶️ 继续';
+  setReadStatus('已暂停');
+}
+
+function resumeReading(){
+  if (!reading || !pausedReading) return;
+  pausedReading = false;
+  readBtn.textContent = '⏸ 暂停';
+  setReadStatus(chineseVoice ? ('朗读中…（' + chineseVoice.name + '）') : '朗读中…');
+  startSpeechKeepAlive();
+  try {
+    // If pause left the queue empty (Chrome quirk), restart from current sentence
+    if (speechSynthesis.paused) {
+      speechSynthesis.resume();
+    } else if (!speechSynthesis.speaking) {
+      const token = speakToken;
+      speakSentenceAt(sentencePos, token);
+    }
+  } catch (e) {
+    const token = speakToken;
+    speakSentenceAt(sentencePos, token);
+  }
+}
+
+rateLabel.textContent = rateRange.value + '×';
+rateRange.addEventListener('input', () => {
+  rateLabel.textContent = rateRange.value + '×';
+});
+
+readBtn.addEventListener('click', () => {
+  if (!reading) startReading();
+  else if (pausedReading) resumeReading();
+  else pauseReading();
+});
+
+document.getElementById('stopReadBtn').addEventListener('click', () => {
+  stopReading();
+  setReadStatus('已停止');
 });
 
 // ---- init ----
