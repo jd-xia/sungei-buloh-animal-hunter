@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Countdowns</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&family=Manrope:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #120c08;
+    --bg-mid: #1b120a;
+    --bronze: #8a6836;
+    --bronze-dim: #3c2c16;
+    --gold: #e6b458;
+    --gold-bright: #f2c877;
+    --gold-soft: rgba(230, 180, 88, 0.4);
+    --ink: #f5efe4;
+    --ink-dim: #b9a480;
+    --ink-faint: #6d5d3e;
+    --danger: #c96a5a;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+    background: var(--bg-deep);
+    font-family: "Manrope", sans-serif;
+    color: var(--ink);
+  }
+
+  .field {
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 22% 18%, rgba(230, 180, 88, 0.11), transparent 60%),
+      radial-gradient(ellipse 50% 45% at 82% 82%, rgba(138, 104, 54, 0.15), transparent 60%),
+      radial-gradient(circle at 50% 50%, var(--bg-mid), var(--bg-deep) 80%);
+    animation: breathe 24s ease-in-out infinite;
+    z-index: 0;
+  }
+  @keyframes breathe { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.07); } }
+
+  .grain {
+    position: fixed; inset: 0; z-index: 2; pointer-events: none;
+    opacity: 0.035; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  .stage {
+    position: relative; z-index: 1; height: 100vh; width: 100vw;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 26px; padding: 40px;
+  }
+
+  .quote {
+    font-family: "Fraunces", serif; font-style: italic; font-weight: 400;
+    font-size: 18px; letter-spacing: 0.2px; color: var(--ink-faint); text-align: center;
+  }
+  .quote-divider {
+    width: 42px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0.4;
+  }
+
+  .grid {
+    display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start;
+    gap: 48px; max-width: 1100px; margin-top: 6px;
+  }
+
+  .empty-hint { font-size: 14px; color: var(--ink-faint); text-align: center; max-width: 260px; line-height: 1.6; }
+
+  .card { position: relative; display: flex; flex-direction: column; align-items: center; gap: 12px; width: 200px; }
+
+  .ring-wrap { position: relative; width: 190px; height: 190px; display: flex; align-items: center; justify-content: center; }
+  .ring-wrap svg { position: absolute; inset: 0; overflow: visible; }
+
+  .gear-rotate { transform-box: fill-box; transform-origin: center; animation: spin 100s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .gear-root { fill: none; stroke: var(--bronze); stroke-width: 1.4; opacity: 0.5; }
+  .gear-tooth { fill: var(--bg-deep); stroke: var(--bronze); stroke-width: 1.2; opacity: 0.55; }
+
+  .tick { stroke: var(--ink-faint); stroke-width: 1; opacity: 0.3; }
+  .tick-major { stroke: var(--bronze); stroke-width: 1.3; opacity: 0.55; }
+
+  .track { fill: none; stroke: var(--bronze-dim); stroke-width: 2.5; transform: rotate(-90deg); transform-origin: center; }
+  .progress {
+    fill: none; stroke: var(--gold); stroke-width: 2.5; stroke-linecap: round;
+    filter: drop-shadow(0 0 6px var(--gold-soft));
+    transition: stroke-dashoffset 1s linear;
+    transform: rotate(-90deg); transform-origin: center;
+  }
+
+  .core { display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .days-num {
+    font-family: "Fraunces", serif; font-weight: 500; font-size: 50px; line-height: 1;
+    letter-spacing: -1px; color: var(--ink); font-variant-numeric: tabular-nums;
+  }
+  .days-rule { width: 26px; height: 1px; background: var(--bronze); opacity: 0.45; margin: 7px 0 5px; }
+  .days-label { font-size: 12px; color: var(--ink-dim); letter-spacing: 0.3px; }
+
+  .card-title { font-size: 14px; color: var(--ink-dim); text-align: center; max-width: 190px; line-height: 1.4; letter-spacing: 0.15px; }
+  .sub-clock { display: flex; gap: 10px; font-size: 12px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+
+  .edit-btn {
+    position: absolute; top: -6px; right: 4px; width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; border: none; color: var(--ink-faint);
+    opacity: 0.15; cursor: pointer; transition: opacity 0.2s, color 0.2s;
+  }
+  .edit-btn svg { width: 14px; height: 14px; }
+  .card:hover .edit-btn { opacity: 0.6; }
+  .edit-btn:hover { opacity: 1 !important; color: var(--gold); }
+
+  .fab {
+    position: fixed; right: 28px; width: 42px; height: 42px; border-radius: 50%;
+    border: 1px solid var(--bronze-dim); background: rgba(27, 18, 10, 0.5);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03), inset 0 1px 2px rgba(0,0,0,0.35);
+    color: var(--ink-faint); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; opacity: 0.22; transition: opacity 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+    z-index: 5;
+  }
+  .fab svg { width: 18px; height: 18px; }
+  .fab:hover { opacity: 1; color: var(--gold); border-color: var(--gold); transform: translateY(-1px); }
+  .fab-add { bottom: 28px; }
+  .fab-manage { bottom: 78px; }
+
+  .done-state { font-family: "Fraunces", serif; font-style: italic; font-size: 20px; color: var(--gold); text-align: center; }
+
+  .backdrop {
+    position: fixed; inset: 0; background: rgba(8, 5, 3, 0.8);
+    display: flex; align-items: center; justify-content: center; z-index: 10;
+    opacity: 0; visibility: hidden; transition: opacity 0.18s ease;
+  }
+  .backdrop.open { opacity: 1; visibility: visible; }
+
+  .panel {
+    display: flex; width: 620px; height: 460px; max-width: 92vw; max-height: 86vh;
+    background: var(--bg-mid); border: 1px solid var(--bronze-dim); border-radius: 8px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 24px 60px rgba(0, 0, 0, 0.5);
+    transform: scale(0.97) translateY(4px); transition: transform 0.18s ease;
+  }
+  .backdrop.open .panel { transform: scale(1) translateY(0); }
+
+  .panel-list { width: 220px; flex-shrink: 0; border-right: 1px solid var(--bronze-dim); background: var(--bg-deep); display: flex; flex-direction: column; }
+  .panel-list-header { padding: 18px 20px 10px; font-family: "Fraunces", serif; font-style: italic; font-size: 15px; color: var(--ink-dim); }
+  .panel-list-items { flex: 1; overflow-y: auto; padding: 2px 10px 10px; display: flex; flex-direction: column; gap: 2px; }
+
+  .list-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 10px 10px; border-radius: 4px; border-left: 2px solid transparent;
+    cursor: pointer; font-size: 13px; color: var(--ink-dim);
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .list-row span.name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .list-row:hover { background: rgba(230, 180, 88, 0.06); border-left-color: rgba(230, 180, 88, 0.35); }
+  .list-row.active { background: rgba(230, 180, 88, 0.12); border-left-color: var(--gold); color: var(--ink); }
+
+  .new-row {
+    display: flex; align-items: center; gap: 8px; padding: 11px 12px; margin: 2px 10px 8px;
+    border: 1px dashed var(--bronze-dim); border-radius: 5px; color: var(--gold); font-size: 13px;
+    cursor: pointer; transition: border-color 0.15s, background 0.15s;
+  }
+  .new-row svg { width: 13px; height: 13px; }
+  .new-row:hover { border-color: var(--gold); background: rgba(230, 180, 88, 0.06); }
+
+  .badge { font-size: 10px; padding: 2px 7px; border-radius: 8px; border: 1px solid var(--bronze-dim); color: var(--ink-faint); white-space: nowrap; flex-shrink: 0; }
+  .badge.urgent { border-color: var(--danger); color: var(--danger); }
+
+  .panel-footer { padding: 10px 20px 14px; border-top: 1px solid var(--bronze-dim); }
+  .backup-link { font-size: 11px; color: var(--ink-faint); cursor: pointer; }
+  .backup-link:hover { color: var(--gold); }
+
+  .panel-detail { flex: 1; padding: 26px 30px; display: flex; flex-direction: column; gap: 16px; position: relative; overflow-y: auto; }
+  .panel-close {
+    position: absolute; top: 14px; right: 14px; width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; background: transparent; border: none;
+    color: var(--ink-faint); cursor: pointer;
+  }
+  .panel-close svg { width: 13px; height: 13px; }
+  .panel-close:hover { color: var(--gold); }
+
+  .panel-empty { margin: auto; text-align: center; color: var(--ink-faint); display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .panel-empty svg { width: 26px; height: 26px; opacity: 0.5; }
+  .panel-empty span { font-size: 13px; max-width: 220px; line-height: 1.7; }
+
+  .detail-title { font-family: "Fraunces", serif; font-weight: 500; font-size: 17px; color: var(--ink); margin: 0 0 2px; }
+  .detail-field { display: flex; flex-direction: column; gap: 6px; }
+  .detail-field label { font-size: 12px; color: var(--ink-dim); }
+  .detail-field input {
+    background: var(--bg-deep); border: 1px solid var(--bronze-dim); border-radius: 4px; padding: 9px 11px;
+    color: var(--ink); font-family: "Manrope", sans-serif; font-size: 13px;
+  }
+  .detail-field input:focus { outline: none; border-color: var(--gold); }
+
+  .detail-actions { margin-top: auto; display: flex; align-items: center; gap: 12px; padding-top: 16px; border-top: 1px solid var(--bronze-dim); }
+  .icon-btn {
+    width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: transparent; border: 1px solid var(--bronze-dim); color: var(--ink-faint); cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .icon-btn svg { width: 14px; height: 14px; }
+  .icon-btn:hover { color: var(--gold); border-color: var(--gold); }
+  .icon-btn.danger:hover { color: var(--danger); border-color: var(--danger); }
+
+  .save-btn {
+    margin-left: auto; background: var(--gold); color: var(--bg-deep); border: none; padding: 9px 20px;
+    border-radius: 5px; font-family: "Manrope", sans-serif; font-weight: 500; font-size: 13px; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .save-btn:hover { background: var(--gold-bright); }
+
+  .backup-view textarea {
+    background: var(--bg-deep); border: 1px solid var(--bronze-dim); border-radius: 4px; padding: 10px;
+    color: var(--ink-dim); font-family: "Manrope", sans-serif; font-size: 11px; resize: vertical; min-height: 140px; width: 100%;
+  }
+  .backup-view textarea:focus { outline: none; border-color: var(--gold); }
+  .backup-hint { font-size: 12px; color: var(--ink-dim); }
+  .backup-status { font-size: 12px; color: var(--gold); min-height: 16px; }
+  .backup-return { font-size: 12px; color: var(--ink-faint); cursor: pointer; align-self: flex-start; }
+  .backup-return:hover { color: var(--gold); }
+</style>
+</head>
+<body>
+<div class="field"></div>
+<div class="grain"></div>
+
+<div class="stage">
+  <div class="quote">Small steps, big changes.</div>
+  <div class="quote-divider"></div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<button class="fab fab-add" id="addBtn" title="添加">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+<button class="fab fab-manage" id="manageBtn" title="管理">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+</button>
+
+<div class="backdrop" id="backdrop">
+  <div class="panel">
+    <div class="panel-list">
+      <div class="panel-list-header">计时项目</div>
+      <div class="panel-list-items" id="listItems"></div>
+      <div class="panel-footer"><span class="backup-link" id="backupLink">备份 / 迁移</span></div>
+    </div>
+    <div class="panel-detail" id="detail"></div>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = 'quiet_countdowns_v1';
+  const R_PROGRESS = 58;
+  const CIRC = 2 * Math.PI * R_PROGRESS;
+  const CENTER = 95;
+
+  const ICON = {
+    pencil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+    trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>',
+    close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+    clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
+  };
+
+  // ---- fine instrument dial: rotating gear + static minute-track ----
+  function buildTicks(cx, cy, rStart, rMinor, rMajor, count) {
+    let out = '';
+    for (let i = 0; i < count; i++) {
+      const angle = (i * 2 * Math.PI) / count - Math.PI / 2;
+      const isMajor = i % 5 === 0;
+      const rEnd = isMajor ? rMajor : rMinor;
+      const x1 = cx + rStart * Math.cos(angle), y1 = cy + rStart * Math.sin(angle);
+      const x2 = cx + rEnd * Math.cos(angle), y2 = cy + rEnd * Math.sin(angle);
+      out += `<line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}" class="${isMajor ? 'tick tick-major' : 'tick'}" />`;
+    }
+    return out;
+  }
+  function buildGearTeeth(cx, cy, rootR, tipR, teeth) {
+    let out = '';
+    const toothWidth = (2 * Math.PI * rootR / teeth) * 0.5;
+    for (let i = 0; i < teeth; i++) {
+      const angleDeg = i * (360 / teeth);
+      out += `<g transform="rotate(${angleDeg} ${cx} ${cy})"><rect x="${(cx - toothWidth / 2).toFixed(2)}" y="${(cy - tipR).toFixed(2)}" width="${toothWidth.toFixed(2)}" height="${(tipR - rootR).toFixed(2)}" rx="2" ry="2" class="gear-tooth" /></g>`;
+    }
+    return out;
+  }
+  const TICKS_MARKUP = buildTicks(CENTER, CENTER, 84, 88, 92, 60);
+  const GEAR_MARKUP = `<circle cx="${CENTER}" cy="${CENTER}" r="70" class="gear-root"></circle>${buildGearTeeth(CENTER, CENTER, 70, 82, 14)}`;
+
+  function loadItems() {
+    try { const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : []; }
+    catch (e) { return []; }
+  }
+  function saveItems(items) { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
+  function toLocalInputValue(date) {
+    const pad = n => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  }
+
+  let items = loadItems();
+
+  const grid = document.getElementById('grid');
+
+  function cardTemplate(item) {
+    return `
+      <div class="card" data-id="${item.id}">
+        <button class="edit-btn" data-edit="${item.id}">${ICON.pencil}</button>
+        <div class="ring-wrap">
+          <svg viewBox="0 0 190 190">
+            ${TICKS_MARKUP}
+            <g class="gear-rotate">${GEAR_MARKUP}</g>
+            <circle class="track" cx="${CENTER}" cy="${CENTER}" r="${R_PROGRESS}"></circle>
+            <circle class="progress" data-ring="${item.id}" cx="${CENTER}" cy="${CENTER}" r="${R_PROGRESS}"
+              stroke-dasharray="${CIRC}" stroke-dashoffset="${CIRC}"></circle>
+          </svg>
+          <div class="core" data-core="${item.id}">
+            <div class="days-num" data-days="${item.id}">00</div>
+            <div class="days-rule"></div>
+            <div class="days-label" data-dayslabel="${item.id}">days</div>
+          </div>
+        </div>
+        <div class="sub-clock" data-clock="${item.id}"><span>00h</span><span>00m</span><span>00s</span></div>
+        <div class="card-title">${item.title}</div>
+      </div>
+    `;
+  }
+
+  function renderGrid() {
+    if (items.length === 0) {
+      grid.innerHTML = `<div class="empty-hint">点击右下角 + 添加第一个计时</div>`;
+      return;
+    }
+    grid.innerHTML = items.map(cardTemplate).join('');
+    grid.querySelectorAll('[data-edit]').forEach(btn => {
+      btn.addEventListener('click', () => openPanel('edit', btn.dataset.edit));
+    });
+  }
+
+  function tick() {
+    const now = Date.now();
+    items.forEach(item => {
+      const diff = item.target - now;
+      const ring = document.querySelector(`[data-ring="${item.id}"]`);
+      const core = document.querySelector(`[data-core="${item.id}"]`);
+      const clock = document.querySelector(`[data-clock="${item.id}"]`);
+      if (!ring || !core) return;
+
+      if (diff <= 0) {
+        ring.style.strokeDashoffset = 0;
+        core.innerHTML = `<div class="done-state">Here we are.</div>`;
+        if (clock) clock.style.display = 'none';
+        return;
+      }
+
+      const total = item.target - item.start;
+      const elapsed = now - item.start;
+      const pct = Math.min(Math.max(elapsed / total, 0), 1);
+      ring.style.strokeDashoffset = CIRC * (1 - pct);
+
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const m = Math.floor((diff / (1000 * 60)) % 60);
+      const s = Math.floor((diff / 1000) % 60);
+      const pad = n => String(n).padStart(2, '0');
+
+      const daysEl = document.querySelector(`[data-days="${item.id}"]`);
+      const labelEl = document.querySelector(`[data-dayslabel="${item.id}"]`);
+      if (daysEl) daysEl.textContent = d;
+      if (labelEl) labelEl.textContent = d === 1 ? 'day' : 'days';
+      if (clock) clock.innerHTML = `<span>${pad(h)}h</span><span>${pad(m)}m</span><span>${pad(s)}s</span>`;
+    });
+  }
+
+  const backdrop = document.getElementById('backdrop');
+  const listItemsEl = document.getElementById('listItems');
+  const detailEl = document.getElementById('detail');
+  let panelMode = 'empty';
+  let selectedId = null;
+
+  function badgeInfo(item) {
+    const diff = item.target - Date.now();
+    if (diff <= 0) return { cls: '', label: '已到' };
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    if (days < 7) return { cls: 'urgent', label: days + ' 天' };
+    return { cls: '', label: days + ' 天' };
+  }
+
+  function renderList() {
+    const sorted = [...items].sort((a, b) => a.target - b.target);
+    const rows = sorted.map(item => {
+      const b = badgeInfo(item);
+      return `<div class="list-row ${item.id === selectedId ? 'active' : ''}" data-row="${item.id}">
+        <span class="name">${item.title}</span><span class="badge ${b.cls}">${b.label}</span>
+      </div>`;
+    }).join('');
+    listItemsEl.innerHTML = `<div class="new-row" id="newRow">${ICON.plus}<span>新建计时</span></div>${rows}`;
+    document.getElementById('newRow').addEventListener('click', () => openPanel('new', null));
+    listItemsEl.querySelectorAll('[data-row]').forEach(row => {
+      row.addEventListener('click', () => openPanel('edit', row.dataset.row));
+    });
+  }
+
+  function renderDetail() {
+    if (panelMode === 'backup') {
+      detailEl.innerHTML = `
+        <button class="panel-close" id="closeBtn">${ICON.close}</button>
+        <div class="detail-title">备份 / 迁移</div>
+        <div class="backup-hint">下面已经是当前数据。用“复制”或“下载”备份；恢复时把内容粘贴进来（或选择文件），点“导入”。</div>
+        <textarea id="ioText"></textarea>
+        <div class="backup-status" id="ioStatus"></div>
+        <div class="detail-actions" style="flex-wrap: wrap; row-gap: 10px;">
+          <span class="backup-return" id="backToList">← 返回</span>
+          <button class="icon-btn" id="ioCopyBtn" title="复制到剪贴板">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5a1.5 1.5 0 0 1 1.5-1.5H15"/></svg>
+          </button>
+          <button class="icon-btn" id="ioDownloadBtn" title="下载为文件">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4-4m4 4 4-4"/><path d="M4 19h16"/></svg>
+          </button>
+          <label class="icon-btn" id="ioFileLabel" title="从文件导入" style="cursor:pointer;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4m0 0 4 4m-4-4-4 4"/><path d="M4 19h16"/></svg>
+            <input type="file" accept="application/json,.json" id="ioFileInput" style="display:none;">
+          </label>
+          <button class="save-btn" id="ioImportBtn">导入</button>
+        </div>`;
+
+      const ioText = document.getElementById('ioText');
+      const ioStatus = document.getElementById('ioStatus');
+      ioText.value = JSON.stringify(items, null, 2);
+
+      function flashStatus(msg) {
+        ioStatus.textContent = msg;
+        clearTimeout(flashStatus._t);
+        flashStatus._t = setTimeout(() => { ioStatus.textContent = ''; }, 2600);
+      }
+
+      document.getElementById('closeBtn').addEventListener('click', closePanel);
+      document.getElementById('backToList').addEventListener('click', () => openPanel('empty', null));
+
+      document.getElementById('ioCopyBtn').addEventListener('click', async () => {
+        ioText.select();
+        try {
+          await navigator.clipboard.writeText(ioText.value);
+          flashStatus('已复制到剪贴板');
+        } catch (e) {
+          try {
+            document.execCommand('copy');
+            flashStatus('已复制到剪贴板');
+          } catch (e2) {
+            flashStatus('复制失败，文字已选中，可手动 Ctrl+C');
+          }
+        }
+      });
+
+      document.getElementById('ioDownloadBtn').addEventListener('click', () => {
+        try {
+          const blob = new Blob([ioText.value], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          const stamp = new Date().toISOString().slice(0, 10);
+          a.href = url; a.download = `countdowns-${stamp}.json`;
+          document.body.appendChild(a); a.click(); a.remove();
+          URL.revokeObjectURL(url);
+          flashStatus('已下载');
+        } catch (e) { flashStatus('下载失败，请改用“复制”'); }
+      });
+
+      document.getElementById('ioFileInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => { ioText.value = reader.result; flashStatus('文件已读入，点“导入”确认'); };
+        reader.readAsText(file);
+        e.target.value = '';
+      });
+
+      document.getElementById('ioImportBtn').addEventListener('click', () => {
+        try {
+          const parsed = JSON.parse(ioText.value);
+          if (!Array.isArray(parsed)) throw new Error('not array');
+          items = parsed.map(i => ({
+            id: i.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
+            title: i.title || '未命名', start: Number(i.start), target: Number(i.target)
+          })).filter(i => !isNaN(i.start) && !isNaN(i.target));
+          saveItems(items); renderGrid(); renderList();
+          flashStatus(`已导入 ${items.length} 项`);
+        } catch (e) { flashStatus('格式不对，请粘贴导出时的 JSON 或选择正确的文件'); }
+      });
+      return;
+    }
+
+    if (panelMode === 'empty') {
+      detailEl.innerHTML = `
+        <button class="panel-close" id="closeBtn">${ICON.close}</button>
+        <div class="panel-empty">${ICON.clock}<span>从左侧选择一个计时来编辑，或点击"新建计时"。</span></div>`;
+      document.getElementById('closeBtn').addEventListener('click', closePanel);
+      return;
+    }
+
+    const item = panelMode === 'edit' ? items.find(i => i.id === selectedId) : null;
+    const title = item ? item.title : '';
+    const start = item ? toLocalInputValue(new Date(item.start)) : toLocalInputValue(new Date());
+    const target = item ? toLocalInputValue(new Date(item.target)) : '';
+
+    detailEl.innerHTML = `
+      <button class="panel-close" id="closeBtn">${ICON.close}</button>
+      <div class="detail-title">${item ? '编辑计时' : '新建计时'}</div>
+      <div class="detail-field"><label>名称（对自己有意义就好）</label><input type="text" id="fTitle" value="${title.replace(/"/g, '&quot;')}" placeholder="例如：Plan B"></div>
+      <div class="detail-field"><label>起点</label><input type="datetime-local" id="fStart" value="${start}"></div>
+      <div class="detail-field"><label>目标日期</label><input type="datetime-local" id="fTarget" value="${target}"></div>
+      <div class="detail-actions">
+        ${item ? `<button class="icon-btn danger" id="deleteBtn" title="删除">${ICON.trash}</button>` : ''}
+        <button class="save-btn" id="saveBtn">保存</button>
+      </div>`;
+
+    document.getElementById('closeBtn').addEventListener('click', closePanel);
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      const fTitle = document.getElementById('fTitle');
+      const fStart = document.getElementById('fStart');
+      const fTarget = document.getElementById('fTarget');
+      if (!fTarget.value) { fTarget.focus(); return; }
+      const t = fTitle.value.trim() || '未命名';
+      const s = new Date(fStart.value).getTime();
+      const tg = new Date(fTarget.value).getTime();
+      if (item) {
+        const idx = items.findIndex(i => i.id === item.id);
+        items[idx] = { ...items[idx], title: t, start: s, target: tg };
+      } else {
+        const newItem = { id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), title: t, start: s, target: tg };
+        items.push(newItem); selectedId = newItem.id;
+      }
+      saveItems(items); renderGrid(); panelMode = 'edit'; renderList(); renderDetail();
+    });
+
+    if (item) {
+      document.getElementById('deleteBtn').addEventListener('click', () => {
+        items = items.filter(i => i.id !== item.id);
+        saveItems(items); renderGrid(); panelMode = 'empty'; selectedId = null; renderList(); renderDetail();
+      });
+    }
+  }
+
+  function openPanel(mode, id) {
+    panelMode = mode; selectedId = id; renderList(); renderDetail(); backdrop.classList.add('open');
+  }
+  function closePanel() { backdrop.classList.remove('open'); }
+
+  document.getElementById('addBtn').addEventListener('click', () => openPanel('new', null));
+  document.getElementById('manageBtn').addEventListener('click', () => openPanel('empty', null));
+  document.getElementById('backupLink').addEventListener('click', () => openPanel('backup', null));
+  backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closePanel(); });
+
+  renderGrid();
+  tick();
+  setInterval(tick, 1000);
+</script>
+</body>
+</html>
